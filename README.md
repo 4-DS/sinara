@@ -2,7 +2,7 @@
 Our goal is to take a minimal set of Open source technologies, combine them into a single solution for Data Science specialists. 
 We are to create a de facto standard for different scenarios. 
 
-These scenarios inlcude both:
+These scenarios include both:
   * DS develops code in a personal environment
   * a development in a DS team on virtual machines on-premises
   * the solution deployment in enterprise based on Kubernetes
