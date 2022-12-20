@@ -1,5 +1,5 @@
 # Sinara
-Our goal is to take a minimal set of open source technologies and combine them into a single solution for data science specialists. 
+Our goal is to take a minimal set of open source technologies and combine them into a single solution for data science specialists.
 We create a de facto standard for different scenarios.
 
 These scenarios include:
