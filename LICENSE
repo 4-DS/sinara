@@ -1,0 +1,65 @@
+SinaraML Source-available software license
+1.	Acceptance
+1.1.	By using the software, you agree to all of the terms and conditions of this license.
+
+2.	Definitions
+2.1.	The Licensors are the authors of this software, who are members of the account «4-DS» on github.com located at https://github.com/4-DS. 
+2.2.	The Software is the software the Licensors provide under this license, including any part of it.
+2.3.	You refers to the individual or entity agreeing to this license.
+2.4.	Non-commercial use means a use that is not intended to obtain commercial advantage or monetary compensation.
+2.5.	Use means what You do with the Software in accordance with this license.
+2.6.	Internal commercial use is the use by a commercial organization for internal purposes.
+2.7.	Commits are any changes and additions created by You and included in the Software.
+2.8.	Trademark means trademarks, service marks, and similar rights.
+Defect means a defect, bug, backdoor, security issue or other deficiency in the code of the Software.
+
+3.	Granted rights
+3.1.	The Licensors grant You, for the duration of the exclusive right, a non-exclusive, non-sublicensable, royalty-free, worldwide license to copy and modify the Software for Non-commercial use, and to distribute modified versions of the Software for Non-commercial use, subject to the limitations and conditions set forth below.
+
+4.	Limitations and conditions
+4.1.	Non-commercial use is limited to research, experiment, testing the Software, review the code of the Software in order to analyze it for Defects.
+4.2.	The Internal commercial use of the Software, modified versions of the Software is not allowed and prohibited.
+4.3.	You may not host the Software on your own servers or on third parties’ servers, nor provide third parties with services to access the Software.
+4.4.	You may not alter, remove, or obscure any notices of this license, copyright, or other notices of the Licensors in the Software.
+4.5.	The names of the Licensors cannot be used to endorse or promote products derived from this Software, modified versions of the Software without specific prior written permission.
+4.6.	You may modify the Software and distribute modified versions of the Software only if the modified versions of the Software are distributed under the terms of this license.
+4.7.	To the extent possible, Licensors waive any right to receive remuneration from You for exercising the rights provided by You specified in section 3 of this license, either directly or through any collective rights management organizations or any voluntary, mandatory state or compulsory licensing system. In all other cases, Licensors retain the right to receive such remuneration, including the use of the Software in other ways other than Non-Commercial Use.
+4.8.	For the avoidance of doubt, Licensors may also grant the right to use the Software under other license terms or stop distributing the Software at any time; however, this does not terminate this license.
+
+5.	Patents and other intellectual property objects
+5.1.	This license applies solely to the Software.
+5.2.	This license does not grant You any rights to use the logo, Trademarks, patents or other intellectual property objects of the Licensors.
+
+6.	No other rights
+6.1.	This license does not imply granting any rights other than those expressly granted in this license.
+
+7.	Termination, suspension and variation
+7.1.	If the Licensors find out that You are using the Software in violation of the terms of this license, this license will be suspended, and the Licensors will send You a notice of such violation. If You cease violating this license within 30 days from the date of receipt of the Licensors' notice, your license will be reinstated. In case of repeated violation on Your part, the license is terminated from the date of detection of the first case of violation of the terms of this license by You and cannot be restored.
+7.2.	The Licensors may change the terms of this license from time to time. Please check the terms of this license periodically to ensure compliance. 
+
+8.	Notices
+8.1.	Using the Software, You must:
+8.1.1.	Save the following information if it is provided by Licensors along with the Software:
+ -	information about the author(s) of the Software, as well as any other persons specified by the Licensors who have the right to indicate authorship, in any reasonable way, at the request of the Licensors (including using a pseudonym, if one is specified);
+ -	copyright notice;
+ -	notice of using this license;
+ -	notice of disclaimer of warranties.
+8.1.2.	Indicate that the Software is provided under the terms of this license, and provide text, or a unified resource identifier (URI), or a hyperlink to this license.
+8.2.	If You modify the Software, You must:
+8.2.1.	Include in any modified copies of the Software visible notices that You have modified the Software and retain an indication of any previous modifications.
+8.2.2.	Indicate that modified versions of the Software are provided under the terms of this license and provide text or a uniform resource identifier (URI) or hyperlink to this license.
+
+9.	Limitation of liability
+9.1.	The Software is provided by the Licensors «as is» and in the form in which the Software exists.  Licensors make no representations or warranties with respect to the Software, modified versions of the Software, express, implied, statutory or otherwise, including, without limitation, warranties of title, merchantability, fitness for a particular purpose, guarantees of non-infringement, absence of hidden or other defects, accuracy, the presence or absence of errors, both known and unknown, or both detectable and undetectable. If a disclaimer of warranties is not permitted in whole or in part, such disclaimer may not apply to You.
+9.2.	To the extent possible, Licensors shall not be liable to You on the basis of any legal doctrine (including, but not limited to, as a result of negligence) for any direct, indirect or other damages and punitive payments, costs, expenses or damages resulting from the application of this license or the use of the Software, a modified version of the Software, even if Licensors have been notified of the possibility of such costs, expenses or damages. If the limitation of liability is not permitted in whole or in part, this limitation may not apply to You.
+
+10.	Making Commits by You
+10.1.	If You send Commits to Licensors, You grant Licensors, for the duration of the exclusive right, a non-exclusive, worldwide, royalty-free license to use the Commit as part of the Software in all ways, including reproduction, modification, etc.
+10.2.	To avoid any ambiguity, Licensors have the right to use Commits for any purpose, including commercial.
+10.3.	To avoid any ambiguity, You may not withdraw Commits sent to Licensors.
+10.4.	You remain the author of the Commits sent to the Licensors and have the right to use them at Your discretion.  However, You do not become the author of the Software after including Your Commits in it. You may use the Software only in accordance with this license.
+
+11.	General
+11.1.	This license and its interpretation and operation are governed solely by the Russian Federation law.
+11.2.	Licensors and You submit to the exclusive jurisdiction of the courts of the Russian Federation, and you agree not to raise any jurisdictional issue if Licensors need to enforce judgment in the Russian Federation or another country.
+11.3.	In the event of any conflict between Russian version and the English version of this license, the Russian version shall prevail.
