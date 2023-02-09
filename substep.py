@@ -541,6 +541,21 @@ class NotebookSubstep:
 
         return entity_url
 
+    def make_custom_data_url(self, entity, data_type):
+        
+        entity_url = entity.get(ENTITY_PATH)
+        entity_name = entity.get(ENTITY_NAME)
+        
+        if data_type == 'custom_inputs':
+
+            self.registered_inputs[entity_name] = entity_url
+            
+        elif data_type == 'custom_outputs':
+            
+            self.registered_outputs[entity_name] = entity_url
+
+        return entity_url
+
     def _get_entity_full_name(self, step_name, env_name, pipeline_name, zone_name, entity_name):
         return f"{env_name}.{pipeline_name}.{zone_name}.{step_name}.{entity_name}"
 
@@ -683,9 +698,10 @@ class NotebookSubstep:
         registered_inputs_info = []
         
         for _input in self._registered_custom_inputs:
-            entity_name = _input.get(ENTITY_NAME, None)
             
-            entity_url = _input.get(ENTITY_PATH, None)
+            entity_name = _input.get(ENTITY_NAME)
+            
+            entity_url = self.make_custom_data_url(_input, 'custom_inputs')
 
             registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
             
@@ -706,8 +722,9 @@ class NotebookSubstep:
         registered_outputs_info = []
         
         for _output in self._registered_custom_outputs:
-            entity_name = _output.get(ENTITY_NAME, None)
-            entity_url = _output.get(ENTITY_PATH, None)
+            entity_name = _output.get(ENTITY_NAME)
+            
+            entity_url = self.make_custom_data_url(_output, 'custom_outputs')
 
 
             registered_outputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
