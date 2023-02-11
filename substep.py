@@ -76,7 +76,24 @@ def get_tmp_prepared():
                 shutil.rmtree(tmp_path)
         
         os.makedirs(get_sinara_component_tmp_path())
-   
+        
+        
+def get_cache_paths():
+    cache_paths = {
+        "test": "/data/cache/test",
+        "prod": "/data/cache/prod",
+        "user": "/data/cache/user"
+    }
+    return cache_paths
+
+def get_cache_path(env_name):
+    
+    env_paths = get_cache_paths()
+    if env_name not in env_paths:
+        raise Exception("Unexpected env_name value:" + env_name)
+
+    return env_paths[env_name]
+
 
 def print_line_as_bold(str):
     
@@ -148,7 +165,10 @@ def get_env_path(env_name):
 
     env_paths = get_data_paths()
     if env_name not in env_paths:
-        raise Exception("Unexpected env_name value:" + env_name)
+        # TODO
+        # make validation
+        return f"/data/{env_name}"
+        #raise Exception("Unexpected env_name value:" + env_name)
 
     return env_paths[env_name]
 
@@ -234,7 +254,9 @@ class NotebookSubstep:
         
         self.registered_outputs = {}
         
-        self.registered_tmp_io = {}
+        self.registered_tmp_inputs = {}
+        
+        self.registered_tmp_outputs = {}
 
 
         #self._commit = str(git.Repo().head.commit)[:8]  # TODO what if git isn't presented
@@ -266,6 +288,26 @@ class NotebookSubstep:
         env_path = get_env_path(self._env_name)
         artifacts_url = f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}/{self._run_id}"
         return artifacts_url
+
+    def _artifact_full_name(self, entity_name):
+        """Returns artifact fullname by name"""
+        return f"{self._env_name}.{self._pipeline_name}.{self._zone_name}.{self._step_name}.{entity_name}"
+    
+
+    def _component_cache_url(self):
+        """Returns local path where managed cached entities are stored for current component"""
+        env_path = get_env_path(self._env_name)
+        return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
+
+    def _cache_url(self):
+        """Returns local path where managed cached entities are stored for current run"""
+        env_path = get_cache_path(self._env_name)
+        return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}/{self._run_id}"
+
+    def _step_cache_url(self):
+        """Returns local path where managed cached entities are stored for current component"""
+        env_path = get_cache_path(self._env_name)
+        return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
 
     
     def _serialize_run(
@@ -341,7 +383,7 @@ class NotebookSubstep:
         run_info["substeps_params"] = self._substeps_params
         run_info["resources"] = self.registered_inputs
         run_info["artifacts"] = self.registered_outputs
-        run_info["cache"] = self.registered_tmp_io
+        run_info["cache"] = {**self.registered_tmp_inputs, **self.registered_tmp_outputs}
         run_info["status"] = 'RUNNING'
         run_info["duration"] = f"{stop_time - start_time}"
         # TODO
@@ -408,7 +450,7 @@ class NotebookSubstep:
                                                                           required_keys=[ENTITY_NAME],
                                                                           available_keys=[ENTITY_NAME])
         
-        self._tmp_outputs_for_print = [self.get_entity_for_print(entity, 'tmp_inputs') for entity in self._registered_tmp_outputs]
+        self._tmp_outputs_for_print = [self.get_entity_for_print(entity, 'tmp_outputs') for entity in self._registered_tmp_outputs]
         
         
         
@@ -556,6 +598,45 @@ class NotebookSubstep:
 
         return entity_url
 
+    
+    def make_tmp_output_url(self, entity_name):
+        """Registers new cache entity and returns URL for it"""
+        # Here we create run-id directory only because,
+        # user are supposed to create either file or folder as an entity.
+        self._validate_entity_name(entity_name)
+        entity_full_name = f"cache:{self._artifact_full_name(entity_name)}"
+        try:
+            os.makedirs(self._cache_url())
+        except:
+            pass
+        entity_url = f"{self._cache_url()}/{entity_name}"
+        
+        self.registered_tmp_outputs[entity_full_name] = entity_url
+        return entity_url
+
+    
+
+    def make_tmp_input_url(self, entity_name):
+        
+        
+        """Registers existed cache entity and returns URL for it """
+        self._validate_entity_name(entity_name)
+        entity_full_name = f"cache:{self._artifact_full_name(entity_name)}"
+
+        entity_paths = glob.glob(f"{self._step_cache_url()}/*/{entity_name}")
+
+        run_ids = sorted([entity_path.split("/")[-2] for entity_path in entity_paths])
+
+        if len(run_ids) > 0:
+            last_run_id = run_ids[-1]
+        else:
+            raise Exception(f"There is no an entity for path: '{self._step_cache_url()}/*/{entity_name}' ")
+
+        entity_url = f"{self._step_cache_url()}/{last_run_id}/{entity_name}"
+        self.registered_tmp_inputs[entity_full_name] = entity_url
+
+        return entity_url
+    
     def _get_entity_full_name(self, step_name, env_name, pipeline_name, zone_name, entity_name):
         return f"{env_name}.{pipeline_name}.{zone_name}.{step_name}.{entity_name}"
 
@@ -579,10 +660,33 @@ class NotebookSubstep:
         entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
         
         if data_type == 'inputs':
+            step_name = entity.get(STEP_NAME) if entity.get(STEP_NAME) else self.step_name
+            pipeline_name = entity.get(PIPELINE_NAME) if entity.get(PIPELINE_NAME) else self.pipeline_name
+            env_name =  entity.get(ENV_NAME) if entity.get(ENV_NAME) else self.env_name
+            zone_name = entity.get(ZONE_NAME) if entity.get(ZONE_NAME) else self.zone_name
+            run_id = entity.get(RUN_ID) if entity.get(RUN_ID) else self.last_run_id(step_name, env_name, pipeline_name, zone_name, entity_name)
+            
+            entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
+
+     
+            env_path = get_env_path(env_name)
+            entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
+        
 
             return {entity_full_name: entity_url}
             
         elif data_type == 'outputs':
+            
+            pipeline_name = entity.get(PIPELINE_NAME) if entity.get(PIPELINE_NAME) else self.pipeline_name
+            env_name = entity.get(ENV_NAME) if entity.get(ENV_NAME) else self.env_name
+            zone_name = entity.get(ZONE_NAME) if entity.get(ZONE_NAME) else self.zone_name
+            
+            entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
+
+     
+            env_path = get_env_path(env_name)
+            entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
+        
             
             return {entity_full_name: entity_url }
         
@@ -599,6 +703,7 @@ class NotebookSubstep:
 
         
         elif data_type == 'tmp_inputs' or data_type == 'tmp_outputs':
+            entity_url = f"{self._cache_url()}/{entity_name}"
             
             return {f'cache:{entity_full_name}': entity_url }
 
@@ -740,60 +845,50 @@ class NotebookSubstep:
         print("\n")
         return registered_outputs
             
-
-    def tmp_inputs(self, *, env_name="curr_env_name", pipeline_name="curr_pipeline_name", zone_name="curr_zone_name", run_id="last_run_id"):
-        
-        registered_inputs_info = []
-        
-        for _input in self._registered_tmp_inputs:
-            step_name = self._step_name
-            entity_name = _input.get(ENTITY_NAME, None)
-            pipeline_name = pipeline_name if pipeline_name != "curr_pipeline_name" else self.pipeline_name
-            env_name = env_name if env_name != "curr_env_name" else self.env_name
-            zone_name = zone_name if zone_name != "curr_zone_name" else self.zone_name
-            run_id = run_id if run_id != "last_run_id" else self.last_run_id(step_name, env_name, pipeline_name, zone_name, entity_name)
-           
             
-            entity_url = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'tmp_inputs')
+    def tmp_inputs(self):     
 
-            registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
+        registered_tmp_inputs_info = []
+        
+        for _tmp_input in self._registered_tmp_inputs:
+            
+            entity_name = _tmp_input.get(ENTITY_NAME)
+            
+            entity_url = self.make_tmp_input_url(entity_name)
+
+            registered_tmp_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
             
             
 
         # python allows different classes with the same name
-        registered_inputs = dataclasses.make_dataclass('TmpInputUrls',
-                                                        registered_inputs_info,
+        registered_tmp_inputs = dataclasses.make_dataclass('TmpInputUrls',
+                                                        registered_tmp_inputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        pp.pprint(registered_inputs)
+        pp.pprint(registered_tmp_inputs)
         print("\n")
-        return registered_inputs
-            
-    def tmp_outputs(self, *, env_name="curr_env_name", pipeline_name="curr_pipeline_name", zone_name="curr_zone_name"):     
+        return registered_tmp_inputs
 
-        registered_outputs_info = []
+            
+    def tmp_outputs(self):     
+
+        registered_tmp_outputs_info = []
         
-        for _output in self._registered_tmp_outputs:
-            step_name = self._step_name
-            entity_name = _output.get(ENTITY_NAME, None)
-            pipeline_name = pipeline_name if pipeline_name != "curr_pipeline_name" else self.pipeline_name
-            env_name = env_name if env_name != "curr_env_name" else self.env_name
-            zone_name = zone_name if zone_name != "curr_zone_name" else self.zone_name
-            run_id = self._run_id
-           
+        for _tmp_output in self._registered_tmp_outputs:
             
-            entity_url = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'tmp_outputs')
+            entity_name = _tmp_output.get(ENTITY_NAME)
+            
+            entity_url = self.make_tmp_output_url(entity_name)
 
-
-            registered_outputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
+            registered_tmp_outputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
             
             
 
         # python allows different classes with the same name
-        registered_outputs = dataclasses.make_dataclass('TmpOutputUrls',
-                                                        registered_outputs_info,
+        registered_tmp_outputs = dataclasses.make_dataclass('TmpOutputUrls',
+                                                        registered_tmp_outputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        pp.pprint(registered_outputs)
+        pp.pprint(registered_tmp_outputs)
         print("\n")
-        return registered_outputs
+        return registered_tmp_outputs
