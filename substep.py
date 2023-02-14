@@ -737,25 +737,23 @@ class NotebookSubstep:
         
         registered_inputs_info = []
         
+        filtered_inputs = {}
+        
         for _input in self._registered_inputs:
-            entity_name = _input.get(ENTITY_NAME, None)
-            pipeline_name = pipeline_name if pipeline_name != "curr_pipeline_name" else self.pipeline_name
-            env_name = env_name if env_name != "curr_env_name" else self.env_name
-            zone_name = zone_name if zone_name != "curr_zone_name" else self.zone_name
-            run_id = run_id if run_id != "last_run_id" else self.last_run_id(step_name, env_name, pipeline_name, zone_name, entity_name)
-           
-            
-            entity_url = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'inputs')
-            
+            if _input[STEP_NAME] == step_name and ((env_name != "curr_env_name" and _input.get(ENV_NAME, None) == env_name) or (pipeline_name != "curr_pipeline_name" and _input.get(PIPELINE_NAME, None) == pipeline_name) or (zone_name != "curr_zone_name" and _input.get(ZONE_NAME, None) == zone_name)):               
+                
+                
+                entity_name = _input.get(ENTITY_NAME, None)
+                pipeline_name = pipeline_name if pipeline_name != "curr_pipeline_name" else self.pipeline_name
+                env_name = env_name if env_name != "curr_env_name" else self.env_name
+                zone_name = zone_name if zone_name != "curr_zone_name" else self.zone_name
+                run_id = run_id if run_id != "last_run_id" else self.last_run_id(step_name, env_name, pipeline_name, zone_name, entity_name)
 
-            #self.requested_resources = {}
 
-            #component_run_id = f"{env_name}.{pipeline_name}.{zone_name}.{step_name}"
+                entity_url = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'inputs')
 
-            #module._register_resource_component(component_run_id, self)
+                registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
 
-            registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
-            
             
 
         # python allows different classes with the same name
