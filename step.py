@@ -10,7 +10,7 @@ from .substep import get_curr_run_id, reset_curr_run_id, set_curr_notebook_name,
 #from .report_publisher import ReportPublisher
 from .substep import print_line_as_bold, ipynb_to_html
 import fnmatch
-#import git
+import git
 import glob
 from IPython.core.display import display
 import pandas as pd
@@ -26,26 +26,32 @@ import jupyter_client
 
 
 class Step:
-# Here we use 'reset_curr_run_id' to ensure an unique run_id every time we are running sinara_Step interactively 
+# Here we use 'reset_curr_run_id' to ensure an unique run_id every time we are running Sinara Step interactively 
     def __init__(self, 
-                run_params_file_globs="ci_run.json",
+                step_params_file_globs,
+                pipeline_params_file_globs = None,
                 env_name = None):
-        # ci_run.json is legacy file name for backward compatibility 
         
         get_tmp_prepared()
         
         self.notebooks = []
         self.exit_code = 0
         self._curr_exception = None
-        run_params_file_path = self._get_run_params_file(run_params_file_globs)
-        set_run_papermill_params(run_params_file_path)
+        step_params_file_path = self._get_run_params_file(step_params_file_globs)
+        
+        pipeline_params_file_path = None
+        
+        if pipeline_params_file_globs:
+            pipeline_params_file_path = self._get_run_params_file(pipeline_params_file_globs)
+            
+        set_run_papermill_params(step_params_file_path, pipeline_params_file_path)
         substeps_params = get_run_papermill_params()["substeps_params"]
 
         print_line_as_bold(f"SINARA Step params:")
         run_paremeters_to_print = copy.deepcopy(get_run_papermill_params()["pipeline_params"])
 
         if env_name is not None:
-                run_paremeters_to_print["env_name"] = env_name
+            run_paremeters_to_print["env_name"] = env_name
         pprint.pprint(run_paremeters_to_print, compact=True)
         print("\n")
         
@@ -82,18 +88,18 @@ class Step:
         finally:
             reset_curr_run_id()
             
-    def _get_run_params_file(self, run_params_file_globs):
+    def _get_run_params_file(self, run_params_file_path):
         
-        if isinstance(run_params_file_globs, str):
-            run_params_file_globs = [run_params_file_globs]
+        if isinstance(run_params_file_path, str):
+            run_params_file_path = [run_params_file_path]
             
         filenames = []
-        for gl in run_params_file_globs:
+        for gl in run_params_file_path:
             filenames += glob.glob(gl)
         if len(filenames) == 1:
             return filenames[0]
         elif len(filenames) == 0:
-            raise Exception("run_params_file_globs doesn't match any file")
+            raise Exception("run_params_file_path doesn't match any file")
     
         df = pd.DataFrame(filenames, columns =['run params file'])    
         display(df)
@@ -507,17 +513,17 @@ def get_papermill_params(
     return papermill_params
 
     
-def set_run_papermill_params(run_params_file_path):
-    os.environ["SINARA_RUN_PARAMS_FILE_PATH"]=run_params_file_path
+def set_run_papermill_params(step_params_file_path, pipeline_params_file_path=None):
+    os.environ["SINARA_STEP_PARAMS_FILE_PATH"] = step_params_file_path
+    os.environ["SINARA_PIPELINE_PARAMS_FILE_PATH"] = '' if not pipeline_params_file_path else pipeline_params_file_path
 
-    
 def get_run_papermill_params():
-    run_params_file_path = os.environ["SINARA_RUN_PARAMS_FILE_PATH"]
+    step_params_file_path = os.environ["SINARA_STEP_PARAMS_FILE_PATH"]
+    pipeline_params_file_path = os.environ["SINARA_PIPELINE_PARAMS_FILE_PATH"]
+    
     papermill_params = {}
-    with open(run_params_file_path) as json_file:
+    with open(step_params_file_path) as json_file:
         papermill_params["params"] = json.load(json_file)
-    
-    
 
     required_pipeline_params = ["env_name",
                                "pipeline_name",
@@ -527,12 +533,17 @@ def get_run_papermill_params():
                           ]
     
     papermill_params["pipeline_params"] = papermill_params["params"]["pipeline_params"]
+    
+    if pipeline_params_file_path:
+        with open(pipeline_params_file_path) as json_file:
+            papermill_params["pipeline_params"] = json.load(json_file)["pipeline_params"]
+            
     papermill_params["step_params"] = papermill_params["params"]["step_params"]
     papermill_params["substeps_params"] = papermill_params["params"]["substeps_params"]
     
     for param in required_pipeline_params:
         if param not in papermill_params["pipeline_params"]:
-            raise Exception(f"Mandatory parameter '{param}' isn't defined in {run_params_file_path}")
+            raise Exception(f"Mandatory parameter '{param}' isn't defined in {step_params_file_path}")
     return papermill_params
 
 
@@ -626,3 +637,76 @@ def create_business_report_summary(runinfo_dict):
     business_report_cell["source"][DURATION_INDEX] = duration
 
     return business_report_cell        
+
+
+class StepSafeguard:
+    
+    @staticmethod
+    def component_is_in_dir(globs):
+        if isinstance(globs, str):
+            globs = [globs]
+        for glob in globs:  
+            if fnmatch.fnmatch(sys.path[0].lower(), glob):
+                return True
+        raise Exception(f"This job can be run for components only located in a directory matches '{globs}' pattern")
+    
+    
+    @staticmethod
+    def component_is_in_branch(globs):
+        if isinstance(globs, str):
+            globs = [globs]
+        for glob in globs:  
+            if fnmatch.fnmatch(git.Repo().active_branch.name.lower(), glob):
+                return True
+        raise Exception(f"This job can be run for components only located in a git branch matches '{globs}' pattern")
+            
+    @staticmethod
+    def git_reset(branch=None):
+        curr_branch = git.Repo().active_branch.name
+        if not branch or curr_branch == branch:
+            git.Repo().head.reset(index=True,working_tree=True)
+        else:
+            git.Repo().git.checkout(branch)
+            git.Repo().head.reset(index=True,working_tree=True)
+            git.Repo().git.checkout(curr_branch)
+
+class StepReport:
+   
+    @staticmethod
+    def tag_commit_by_run(run_id=None, run_fs_path=None):
+        run_id = run_id or StepReport._get_last_run_id()
+        run_fs_path = run_fs_path or StepReport._get_run_fs_path(run_id)
+        StepReport._fetch_all_tags()
+        tag_ref = git.Repo().create_tag(run_id, message=run_fs_path)
+        git.Repo().remote().push(tag_ref)
+        
+    @staticmethod
+    def _fetch_all_tags():
+        #TODO: git fetch --all --tags
+        #https://linuxtut.com/en/76a3fb171e9143ff695e/
+        
+        origin = git.Repo().remote()
+        tags = origin.fetch(**{"tags":True})
+       
+    @staticmethod
+    def _get_run_fs_path(run_id = None):
+        run_id = run_id or StepReport._get_last_run_id()
+        run_info_file_names = glob.glob(f"tmp/{run_id}*.runinfo.json")
+        if len(run_info_file_names) == 0:
+            raise Exception(f"tmp folder doesn't contain '{run_id}*.runinfo.json' file ")
+        run_info_file_name = run_info_file_names[0]
+        
+        with open(run_info_file_name) as json_file:       
+            artifacts_urls = json.load(json_file)["artifacts"]
+            if len(artifacts_urls) == 0:
+                raise Exception(f"DSML component artifacts inside '{run_info_file_name}' file must contain at least one artifact ")
+            artifacts_url = list(artifacts_urls.values())[0]
+            return re.match(f"(.*?{run_id})",artifacts_url).group()
+        
+    @staticmethod
+    def _get_last_run_id():
+        run_info_file_names = glob.glob(f"tmp/run*.runinfo.json")
+        if len(run_info_file_names) == 0:
+            raise Exception("there is not *.runinfo.json files inside tmp folder")
+        run_info_file_name = sorted(run_info_file_names)[-1]
+        return re.match(f".*(run-.*?)_", run_info_file_name).group(1)
