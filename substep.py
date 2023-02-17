@@ -737,22 +737,98 @@ class NotebookSubstep:
         
         registered_inputs_info = []
         
-        filtered_inputs = {}
+        filtered_inputs = []
         
-        for _input in self._registered_inputs:
-            if _input[STEP_NAME] == step_name and ((env_name != "curr_env_name" and _input.get(ENV_NAME, None) == env_name) or (pipeline_name != "curr_pipeline_name" and _input.get(PIPELINE_NAME, None) == pipeline_name) or (zone_name != "curr_zone_name" and _input.get(ZONE_NAME, None) == zone_name)):               
+        is_set_filter_by_env_name = (env_name != "curr_env_name")
+        is_set_filter_by_pipeline_name = (pipeline_name != "curr_pipeline_name")
+        is_set_filter_by_zone_name = (zone_name != "curr_zone_name")
+        is_set_filter_by_run_id = (run_id != "last_run_id")
+
+        prev_input_zone_name = ''
+        steps_in_diff_zones = 0
+        
+        current_env_name = env_name if is_set_filter_by_env_name else self.env_name
+        current_pipeline_name = pipeline_name if is_set_filter_by_pipeline_name else self.pipeline_name
+        current_zone_name = zone_name if is_set_filter_by_zone_name else self.zone_name
+        
+        for _input in self._registered_inputs:    
+            input_env_name = _input.get(ENV_NAME, current_env_name)
+            if not _input.get(ENV_NAME):
+                _input[ENV_NAME] = input_env_name
                 
+            input_pipeline_name = _input.get(PIPELINE_NAME, current_pipeline_name)
+            
+            if not _input.get(PIPELINE_NAME):
+                _input[PIPELINE_NAME] = input_pipeline_name
+            
+            
+            input_zone_name = _input.get(ZONE_NAME, current_zone_name)
+            
+            if not _input.get(ZONE_NAME):
+                _input[ZONE_NAME] = input_zone_name
+            
+
+                    
+            input_of_step_name = (_input[STEP_NAME] == step_name)
+            
+            if input_of_step_name:
                 
-                entity_name = _input.get(ENTITY_NAME, None)
-                pipeline_name = pipeline_name if pipeline_name != "curr_pipeline_name" else self.pipeline_name
-                env_name = env_name if env_name != "curr_env_name" else self.env_name
-                zone_name = zone_name if zone_name != "curr_zone_name" else self.zone_name
-                run_id = run_id if run_id != "last_run_id" else self.last_run_id(step_name, env_name, pipeline_name, zone_name, entity_name)
+                if prev_input_zone_name != input_zone_name:                
+                    steps_in_diff_zones += 1
+
+                if not (is_set_filter_by_env_name or is_set_filter_by_pipeline_name or is_set_filter_by_zone_name):
+                    filtered_inputs.append(_input)
+                else:
+
+                    input_matched_filter_by_env_name = (is_set_filter_by_env_name and input_env_name == env_name)
+                    input_matched_filter_by_pipeline_name = (is_set_filter_by_pipeline_name and input_pipeline_name == pipeline_name)
+                    input_matched_filter_by_zone_name = (is_set_filter_by_zone_name and input_zone_name == zone_name)
+
+                    if input_matched_filter_by_env_name or input_matched_filter_by_pipeline_name or input_matched_filter_by_zone_name:
+                        filtered_inputs.append(_input)
+
+                prev_input_zone_name = input_zone_name
+        #print(filtered_inputs)
+        
+        if steps_in_diff_zones > 1:
+            print(f"Trying to resolving steps ambiguity by defaulting to the zone '{current_zone_name}'...")
+            
+            # Current zone is preferrable in this case
+            filtered_inputs[:] = [_input for _input in filtered_inputs if _input.get(ZONE_NAME, current_zone_name) == current_zone_name ]
+            
+            #print(filtered_inputs)
+            
+            diff_zones_count = 0
+            
+            #print(filtered_inputs)
+            
+            prev_input_zone_name = ''
+            for _input in filtered_inputs:
+                input_zone_name = _input.get(ZONE_NAME, current_zone_name )
+                if input_zone_name != prev_input_zone_name:
+                    diff_zones_count += 1
+                prev_input_zone_name = input_zone_name
+                    
+            #print(diff_zones_count)
+  
+            if diff_zones_count > 1:
+                raise Exception("Ambiguity error: There are more than 1 step with the same name in different zones. Please, define additional parameters to resolve the ambiguity ")
+            
+        if is_set_filter_by_run_id:
+            filtered_inputs[:] = [_input for _input in filtered_inputs if _input.get(RUN_ID, '') == run_id ]
+    
+        for _input in filtered_inputs:
+            entity_name = _input.get(ENTITY_NAME)
+
+            env_name = _input.get(ENV_NAME) #env_name if is_set_filter_by_env_name else self.env_name
+            pipeline_name = _input.get(PIPELINE_NAME) #pipeline_name if is_set_filter_by_pipeline_name else self.pipeline_name
+            zone_name = _input.get(ZONE_NAME) #zone_name if is_set_filter_by_zone_name else self.zone_name 
+            run_id = run_id if run_id != "last_run_id" else self.last_run_id(step_name, env_name, pipeline_name, zone_name, entity_name)
 
 
-                entity_url = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'inputs')
+            entity_url = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'inputs')
 
-                registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
+            registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
 
             
 
