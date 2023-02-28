@@ -203,6 +203,15 @@ class DSMLUrls:
     """
     pass
 
+def default_param_values(params_file_name):
+    params = {}
+    with open(params_file_name) as json_file:
+       params = json.load(json_file)
+    
+    return {
+            "default_pipeline_name": params["pipeline_params"].get("pipeline_name"),
+            "default_step_name": params["step_params"].get("step_name")
+        }
 
 class NotebookSubstep:
     """
@@ -219,27 +228,34 @@ class NotebookSubstep:
     def __init__(self,
                  pipeline_params,
                  step_params,
-                 substeps_params):
+                 substeps_params,
+                 default_env_name="user",
+                 default_pipeline_name="pipeline",
+                 default_zone_name="zone",
+                 default_step_name="step"):
         """NotebookSubstep constructor"""
         
-        # TODO
-        # Give permissions to /data
         get_tmp_prepared()
+        
+        print(default_env_name)
+        print(default_pipeline_name)
+        print(default_zone_name)
+        print(default_step_name)
         
         self._pipeline_params = pipeline_params
         self._step_params = step_params
         self._substeps_params = substeps_params
         
         self._run_id = get_curr_run_id()
-        self._env_name = pipeline_params["env_name"] or "user"
-        self._pipeline_name = pipeline_params["pipeline_name"]
-        if not self._pipeline_name:
-            raise Exception("'pipeline_name' must be specified within pipeline_params")
-        self._zone_name = pipeline_params["zone_name"] or "main_stand"
+        self._env_name = pipeline_params["env_name"] or default_env_name
+        self._pipeline_name = pipeline_params["pipeline_name"] or default_pipeline_name
+        #if not self._pipeline_name:
+        #    raise Exception("'pipeline_name' must be specified within pipeline_params")
+        self._zone_name = pipeline_params["zone_name"] or default_zone_name
         
         # TODO
         # step_name could be defined at step_params level?
-        self._step_name = pipeline_params.get("step_name") or Path(os.getcwd()).name
+        self._step_name = pipeline_params.get("step_name") or default_step_name #or Path(os.getcwd()).name
         
         self._registered_inputs = []
         self._registered_outputs = []
@@ -283,6 +299,7 @@ class NotebookSubstep:
         # TODO
         # Stop the notebook for visualizing a pipeline
         pass
+    
     def _artifacts_url(self):
         """Returns hdfs path where all artifact entities are stored"""
         env_path = get_env_path(self._env_name)
