@@ -13,7 +13,12 @@ import yaml
 from subprocess import STDOUT, PIPE, run, Popen
 from .utils import *
 
-
+def get_curr_run_id():
+    if "DSML_CURR_RUN_ID" not in os.environ:
+        run_id = reset_curr_run_id()
+    else:
+        run_id = os.environ["DSML_CURR_RUN_ID"]
+    return run_id
 
 def save_bentoservice( bentoservice, fspath ):
     offline_build=True
