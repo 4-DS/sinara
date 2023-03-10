@@ -208,9 +208,17 @@ def default_param_values(params_file_name):
     with open(params_file_name) as json_file:
        params = json.load(json_file)
     
+    default_pipeline_name = params["pipeline_params"].get("pipeline_name")
+    if not default_pipeline_name:
+        raise Exception(f"In the file {params_file_name} 'pipeline_name' param is not defined. It's mandatory. ")
+
+    default_step_name = params["step_params"].get("step_name")
+    if not default_step_name:
+        raise Exception(f"In the file {params_file_name} 'step_name' param is not defined. It's mandatory. ")
+    
     return {
-            "default_pipeline_name": params["pipeline_params"].get("pipeline_name"),
-            "default_step_name": params["step_params"].get("step_name")
+            "default_pipeline_name": default_pipeline_name,
+            "default_step_name": default_step_name
         }
 
 class NotebookSubstep:
