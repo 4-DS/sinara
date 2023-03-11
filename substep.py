@@ -255,11 +255,11 @@ class NotebookSubstep:
         self._substeps_params = substeps_params
         
         self._run_id = get_curr_run_id()
-        self._env_name = pipeline_params["env_name"] or default_env_name
-        self._pipeline_name = pipeline_params["pipeline_name"] or default_pipeline_name
+        self._env_name = pipeline_params.get("env_name") or default_env_name
+        self._pipeline_name = pipeline_params.get("pipeline_name") or default_pipeline_name
         #if not self._pipeline_name:
         #    raise Exception("'pipeline_name' must be specified within pipeline_params")
-        self._zone_name = pipeline_params["zone_name"] or default_zone_name
+        self._zone_name = pipeline_params.get("zone_name") or default_zone_name
         
         # TODO
         # step_name could be defined at step_params level?
