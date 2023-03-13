@@ -172,10 +172,6 @@ def get_env_path(env_name):
 
     return env_paths[env_name]
 
-
-
-
-
 ENV_NAME = 'ENV_NAME'
 PIPELINE_NAME = 'PIPELINE_NAME'
 ZONE_NAME = 'ZONE_NAME'
@@ -245,10 +241,10 @@ class NotebookSubstep:
         
         get_tmp_prepared()
         
-        print(default_env_name)
-        print(default_pipeline_name)
-        print(default_zone_name)
-        print(default_step_name)
+        #print(default_env_name)
+        #print(default_pipeline_name)
+        #print(default_zone_name)
+        #print(default_step_name)
         
         self._pipeline_params = pipeline_params
         self._step_params = step_params
