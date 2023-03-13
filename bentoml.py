@@ -8,6 +8,7 @@ import requests
 import bentoml
 import json
 import yaml
+import re
 from subprocess import STDOUT, PIPE, run, Popen
 
 def get_curr_run_id():
@@ -21,7 +22,19 @@ def get_sinara_step_tmp_path():
     return f"{os.getcwd()}/tmp"
 
 def save_bentoservice( bentoservice, fspath ):
-    offline_build=True
+    
+    # Correct 'ensure_python' method in bentoml-init.sh
+    def fix_bentoml_013_2(filepath):
+        
+        fix = 'IFS=. read -r major minor build <<< "${PY_VERSION_SAVED}"; DESIRED_PY_VERSION=$major.$minor; '
+        with open(filepath, "r+") as f:
+            file_content = f.read()
+            fixed_file_content = re.sub('DESIRED_PY_VERSION=.*', fix, file_content, flags = re.M)
+            #print(fixed_file_content)
+            f.seek(0)
+            f.write(fixed_file_content)
+            f.truncate()
+
     ''' save to fs model packed as a BentoService Python object '''
 
     #write bento service to tmp dir
@@ -32,7 +45,10 @@ def save_bentoservice( bentoservice, fspath ):
     bentoservice_dir = f"{tmppath}/{runid}/{bentoservice_name}"
     
     shutil.rmtree(bentoservice_dir, ignore_errors=True)
-    os.makedirs(bentoservice_dir, exist_ok=True)
+    os.makedirs(bentoservice_dir, exist_ok=True) 
+    
+    bentoservice.save_to_dir(bentoservice_dir)
+    fix_bentoml_013_2(f'{bentoservice_dir}/bentoml-init.sh')
     
     #make zip file for bento service
     bentoservice_zipfile =  f"{tmppath}/{runid}_{bentoservice_name}.model" 
