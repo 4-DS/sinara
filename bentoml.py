@@ -1,4 +1,4 @@
-from fs import FileSystem
+from .fs import SinaraFileSystem
 import os
 import shutil
 from pathlib import Path
@@ -40,7 +40,7 @@ def save_bentoservice( bentoservice, fspath ):
 
     #write zip file to fs
     
-    fs = FileSystem.FileSystem()
+    fs = SinaraFileSystem.FileSystem()
     fs.makedirs(fspath)
     fs.put(f"{bentoservice_zipfile}.zip", f"{fspath}/model.zip")
     fs.touch(f"{fspath}/_SUCCESS")
