@@ -359,7 +359,19 @@ class SinaraStepNotebook(SinaraStepModule):
                                             substep_params)\n'
                                             'else:\n'
                                             "    raise Exception('SINARA module must have defined module variable')"]}
+        
         self.output_nb_dict["cells"].append(serialize_run_cell)
+        
+        notebook_name_cell = {'cell_type': 'code',
+                              'execution_count': None,
+                              'metadata': {},
+                              'outputs': [],
+                              'source': ['import os\n',
+                                            f'os.environ["SINARA_NOTEBOOK_NAME"] = "{self.input_nb_name}"']}
+        
+        
+        
+        self.output_nb_dict["cells"].insert(1, notebook_name_cell)
 
 class SinaraStepPythonModule(SinaraStepModule):
 
