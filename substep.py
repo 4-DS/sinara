@@ -570,6 +570,9 @@ class NotebookSubstep:
     
     def _last_run_id_from_fs(self, entity_name, step_path):
 
+        if "DESIGN_MODE" in os.environ:
+            return entity_name
+
         fs = SinaraFileSystem.FileSystem()
 
         entity_paths = fs.glob(f"{step_path}/*/{entity_name}/_SUCCESS")
