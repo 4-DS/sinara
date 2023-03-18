@@ -306,15 +306,15 @@ class NotebookSubstep:
 
     def exit_in_visualize_mode(self):
         # Stop the notebook for visualizing a pipeline
-        if "DISPLAY_MODE" not in os.environ:
+        if "DESIGN_MODE" not in os.environ:
             pass
         else:
             step_dirpath = f'tmp/{self.step_name}'
             os.makedirs(step_dirpath, exist_ok=True)
             
             substep_filename = ''
-            if "SINARA_NOTEBOOK_NAME" in os.environ:
-                substep_filename = os.environ["SINARA_NOTEBOOK_NAME"]
+            if "DSML_CURR_NOTEBOOK_NAME" in os.environ:
+                substep_filename = os.environ["DSML_CURR_NOTEBOOK_NAME"]
             else:
                 raise Exception('Internal error')
                 
