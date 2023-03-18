@@ -9,6 +9,7 @@ import inspect
 import pprint
 import json
 import atexit
+import sys, traceback
 
 from IPython.core.display import Markdown, display
 
@@ -17,6 +18,10 @@ import logging
 
 def get_sinara_version():
     return "0.0.1"
+
+class StopExecution(Exception):
+    def _render_traceback_(self):
+        pass
 
 def isnotebook():
     try:
@@ -300,9 +305,40 @@ class NotebookSubstep:
 # The idea of a tool which creates structure of steps in Git. The tool will be in a separate repository
 
     def exit_in_visualize_mode(self):
-        # TODO
         # Stop the notebook for visualizing a pipeline
-        pass
+        if "DISPLAY_MODE" not in os.environ:
+            pass
+        else:
+            step_dirpath = f'tmp/{self.step_name}'
+            os.makedirs(step_dirpath, exist_ok=True)
+            
+            substep_filename = ''
+            if "SINARA_NOTEBOOK_NAME" in os.environ:
+                substep_filename = os.environ["SINARA_NOTEBOOK_NAME"]
+            else:
+                raise Exception('Internal error')
+                
+            data_inputs = {}
+            data_outputs = {}
+            
+            for _input in self._inputs_for_print:
+                data_inputs.update(_input)
+                
+            for _output in self._outputs_for_print:
+                data_outputs.update(_output)
+            data = {
+                'inputs': data_inputs,
+                'outputs': data_outputs
+            }
+            
+            with open(f'{step_dirpath}/{substep_filename}.json', 'w') as outfile:
+                json.dump(data, outfile)
+        
+            #try:
+            raise StopExecution
+            #except:
+                  #traceback.print_exc()
+            #      sys.exit(0)
     
     def _artifacts_url(self):
         """Returns hdfs path where all artifact entities are stored"""
@@ -476,55 +512,37 @@ class NotebookSubstep:
         
         
     def print_interface_info(self):
-        """Prints artifacts, resources, cache urls and cache usage info"""
+        """Prints inputs, outputs, tmp urls and cache usage info"""
         
-        if not self._inputs_for_print:
-            return
+        if self._inputs_for_print:
+            print_line_as_bold("INPUTS:")
+            pp.pprint(self._inputs_for_print)
+            print("\n")
         
-        print_line_as_bold("INPUTS:")
-        pp.pprint(self._inputs_for_print)
-        print("\n")
+        if self._outputs_for_print: 
+            print_line_as_bold("OUTPUTS:")
+            pp.pprint(self._outputs_for_print)
+            print("\n")
         
-        if not self._outputs_for_print:
-            return
-        print_line_as_bold("OUTPUTS:")
-        pp.pprint(self._outputs_for_print)
-        print("\n")
+        if self._custom_inputs_for_print: 
+            print_line_as_bold("CUSTOM INPUTS:")
+            pp.pprint(self._custom_inputs_for_print)
+            print("\n")
         
-        if not self._custom_inputs_for_print:
-            return
-        print_line_as_bold("CUSTOM INPUTS:")
-        pp.pprint(self._custom_inputs_for_print)
-        print("\n")
+        if self._custom_outputs_for_print: 
+            print_line_as_bold("CUSTOM OUTPUTS:")
+            pp.pprint(self._custom_outputs_for_print)
+            print("\n")
         
-        if not self._custom_outputs_for_print:
-            return
-        print_line_as_bold("CUSTOM OUTPUTS:")
-        pp.pprint(self._custom_outputs_for_print)
-        print("\n")
-        
-        if not self._tmp_inputs_for_print:
-            return
-        print_line_as_bold("TMP INPUTS:")
-        pp.pprint(self._tmp_inputs_for_print)
-        print("\n")
+        if self._tmp_inputs_for_print: 
+            print_line_as_bold("TMP INPUTS:")
+            pp.pprint(self._tmp_inputs_for_print)
+            print("\n")
    
-        if not self._tmp_outputs_for_print:
-            return
-        print_line_as_bold("TMP OUTPUTS:")
-        pp.pprint(self._tmp_outputs_for_print)
-        print("\n")
-
-        #if not self._registered_last_cache_entities and not self._registered_new_cache_entities:
-        #    return
-
-        #print_line_as_bold("CACHE URLS:")
-        #pp.pprint(self._registered_new_cache_entities)
-        #pp.pprint(self._registered_last_cache_entities)
-        #print("\n")
-
-        #print_line_as_bold("CACHE USAGE:")
-        #self.print_cache_usage()    
+        if self._tmp_outputs_for_print: 
+            print_line_as_bold("TMP OUTPUTS:")
+            pp.pprint(self._tmp_outputs_for_print)
+            print("\n")
     
     @property
     def env_name(self):
