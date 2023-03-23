@@ -150,13 +150,7 @@ def reset_curr_run_id():
     return run_id
 
 def get_user():
-    # TODO
-    # single use 
-    if True:
-        return os.getenv("DSML_USER") or 'buslovaev_ma'
-    if is_local_host():
-        return os.getenv("DSML_USER") or get_local_var("hdfs_user", "Enter your NLMK user name:")
-    return  os.getenv("JUPYTERHUB_USER") or os.getenv("DSML_USER") or getpass.getuser()
+    return os.getenv("DSML_USER") or 'jovyan'
 
 def get_data_paths():
     data_paths = {
@@ -164,17 +158,19 @@ def get_data_paths():
         "prod": "/data/production",
         "user": f"/data/home/{get_user()}"
     }
+    
+    custom_data_paths = {}
+    if os.path.isfile("sinara/infra/env.json"):
+        with open("sinara/infra/env.json") as json_file:
+            custom_data_paths = json.load(json_file)
+
+        data_paths = {**data_paths,**custom_data_paths}
     return data_paths
 
 def get_env_path(env_name):
-
     env_paths = get_data_paths()
     if env_name not in env_paths:
-        # TODO
-        # make validation
-        return f"/data/{env_name}"
-        #raise Exception("Unexpected env_name value:" + env_name)
-
+        raise Exception("Unexpected env_name value:" + env_name)
     return env_paths[env_name]
 
 ENV_NAME = 'ENV_NAME'
