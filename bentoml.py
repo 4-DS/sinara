@@ -10,6 +10,7 @@ import json
 import yaml
 import re
 from subprocess import STDOUT, PIPE, run, Popen
+import dataclasses
 
 def get_curr_run_id():
     if "DSML_CURR_RUN_ID" not in os.environ:
@@ -21,7 +22,7 @@ def get_curr_run_id():
 def get_sinara_step_tmp_path():
     return f"{os.getcwd()}/tmp"
 
-def save_bentoservice( bentoservice, fspath ):
+def save_bentoservice( bentoservice, bentoservice_info ):
     
     # Correct 'ensure_python' method in bentoml-init.sh
     def fix_bentoml_013_2(filepath):
@@ -36,7 +37,16 @@ def save_bentoservice( bentoservice, fspath ):
             f.truncate()
 
     ''' save to fs model packed as a BentoService Python object '''
+    
+    outputs = bentoservice_info[0]
+    bento_entity_name = bentoservice_info[1]
+    bentoservice_fullname = getattr(outputs, f'_{bento_entity_name}')
+    fspath = getattr(outputs, bento_entity_name)
 
+    save_info = [f'BENTO_SERVICE={bentoservice_fullname}']
+    
+    print(save_info)
+    
     #write bento service to tmp dir
     runid = get_curr_run_id()
     
@@ -49,6 +59,11 @@ def save_bentoservice( bentoservice, fspath ):
     
     bentoservice.save_to_dir(bentoservice_dir)
     fix_bentoml_013_2(f'{bentoservice_dir}/bentoml-init.sh')
+
+    save_info_file = os.path.join(bentoservice_dir, 'save_info.txt')
+
+    with open(save_info_file, 'w+') as f:
+        f.writelines(line + '\n' for line in save_info)
     
     #make zip file for bento service
     bentoservice_zipfile =  f"{tmppath}/{runid}_{bentoservice_name}.model" 
