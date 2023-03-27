@@ -35,15 +35,11 @@ def isnotebook():
     except NameError:
         return False      # Probably standard Python interpreter
 
-    
-
 def set_curr_notebook_name(nb_name):
     os.environ["DSML_CURR_NOTEBOOK_NAME"] = nb_name
     
-    
 def get_curr_notebook_name():
     return os.getenv('DSML_CURR_NOTEBOOK_NAME') or "standalone"
-
 
 def set_curr_notebook_output_name(nb_name):
     os.environ["DSML_CURR_NOTEBOOK_OUTPUT_NAME"] = nb_name
@@ -53,7 +49,6 @@ def get_curr_notebook_output_name():
 
 def get_sinara_user_work_dir():
     return os.getenv("JUPYTER_SERVER_ROOT") or '/home/jovyan/work'
-
 
 def get_tmp_prepared():
     if "DSML_CURR_RUN_ID_FROM_PLINE" not in os.environ:
@@ -126,7 +121,6 @@ def ipynb_to_html(src_path, dst_path):
     with open(dst_path, "w") as f:
         f.write(html_data)
 
-        
 start_time = datetime.now()
 pp = pprint.PrettyPrinter()
 
@@ -584,10 +578,10 @@ class NotebookSubstep:
         
         env_path = get_env_path(env_name)
         
-        print(env_path)
+        #print(env_path)
         
         step_path = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}"
-        print(step_path)
+        #print(step_path)
 
         last_run_id_from_fs = self._last_run_id_from_fs(entity_name, step_path)
 
@@ -619,7 +613,7 @@ class NotebookSubstep:
             
             self.registered_tmp_io[f'cache:{entity_full_name}'] = entity_url
 
-        return entity_url
+        return entity_url, entity_full_name
 
     def make_custom_data_url(self, entity, data_type):
         
@@ -864,8 +858,9 @@ class NotebookSubstep:
             run_id = run_id if run_id != "last_run_id" else self.last_run_id(step_name, env_name, pipeline_name, zone_name, entity_name)
 
 
-            entity_url = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'inputs')
+            entity_url, entity_fullname = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'inputs')
 
+            registered_inputs_info.append((f'_{entity_name}', str, dataclasses.field(default=entity_fullname)))
             registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
 
             
@@ -875,8 +870,8 @@ class NotebookSubstep:
                                                         registered_inputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        pp.pprint(registered_inputs)
-        print("\n")
+        #pp.pprint(registered_inputs)
+        #print("\n")
         return registered_inputs
             
     def outputs(self, *, env_name="curr_env_name", pipeline_name="curr_pipeline_name", zone_name="curr_zone_name"):     
@@ -892,9 +887,9 @@ class NotebookSubstep:
             run_id = self._run_id
            
             
-            entity_url = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'outputs')
+            entity_url, entity_fullname = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'outputs')
 
-
+            registered_outputs_info.append((f'_{entity_name}', str, dataclasses.field(default=entity_fullname)))
             registered_outputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
             
             
@@ -904,8 +899,8 @@ class NotebookSubstep:
                                                         registered_outputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        pp.pprint(registered_outputs)
-        print("\n")
+        #pp.pprint(registered_outputs)
+        #print("\n")
         return registered_outputs
 
             
@@ -929,8 +924,8 @@ class NotebookSubstep:
                                                         registered_inputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        pp.pprint(registered_inputs)
-        print("\n")
+        #pp.pprint(registered_inputs)
+        #print("\n")
         return registered_inputs
 
             
@@ -953,8 +948,8 @@ class NotebookSubstep:
                                                         registered_outputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        pp.pprint(registered_outputs)
-        print("\n")
+        #pp.pprint(registered_outputs)
+        #print("\n")
         return registered_outputs
             
             
@@ -977,8 +972,8 @@ class NotebookSubstep:
                                                         registered_tmp_inputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        pp.pprint(registered_tmp_inputs)
-        print("\n")
+        #pp.pprint(registered_tmp_inputs)
+        #print("\n")
         return registered_tmp_inputs
 
             
@@ -1001,6 +996,6 @@ class NotebookSubstep:
                                                         registered_tmp_outputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        pp.pprint(registered_tmp_outputs)
-        print("\n")
+        #pp.pprint(registered_tmp_outputs)
+        #print("\n")
         return registered_tmp_outputs
