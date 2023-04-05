@@ -293,20 +293,24 @@ class NotebookSubstep:
             True)
 
 # The idea of a tool which creates structure of steps in Git. The tool will be in a separate repository
+    def get_visualizer_report_name(self):
+        import uuid;
+        output_guid = str(uuid.uuid4())
+        print({self.step_name})
+        return f"{self.step_name}.{self.substep_name}.{output_guid}.json"
 
     def exit_in_visualize_mode(self):
         # Stop the notebook for visualizing a pipeline
         if "DESIGN_MODE" not in os.environ:
             pass
-        else:
-            step_dirpath = f'tmp/{self.step_name}'
+        else: 
+            step_dirpath = os.getenv("VISUALIZER_SESSION_RUN_ID", "")
+            if not step_dirpath:
+                raise Exception("VISUALIZER_SESSION_RUN_ID environment variable not set or empty")
+            
             os.makedirs(step_dirpath, exist_ok=True)
             
-            substep_filename = ''
-            if "DSML_CURR_NOTEBOOK_NAME" in os.environ:
-                substep_filename = os.environ["DSML_CURR_NOTEBOOK_NAME"]
-            else:
-                raise Exception('Internal error')
+            substep_filename = self.get_visualizer_report_name()
                 
             data_inputs = {}
             data_outputs = {}
@@ -317,11 +321,13 @@ class NotebookSubstep:
             for _output in self._outputs_for_print:
                 data_outputs.update(_output)
             data = {
+                'step_name': self.step_name,
+                'substep_name': self.substep_name,
                 'inputs': data_inputs,
                 'outputs': data_outputs
             }
             
-            with open(f'{step_dirpath}/{substep_filename}.json', 'w') as outfile:
+            with open(f'{step_dirpath}/{substep_filename}', 'w') as outfile:
                 json.dump(data, outfile)
         
             #try:
@@ -556,6 +562,11 @@ class NotebookSubstep:
         
     @property
     def substep_name(self):
+        if "DSML_CURR_NOTEBOOK_NAME" in os.environ:
+            substep_notebook_name = os.getenv("DSML_CURR_NOTEBOOK_NAME")
+            self._substep_name = substep_notebook_name.split('.')[0]
+        else:
+           raise Exception('Internal error')
         return self._substep_name
     
     def _last_run_id_from_fs(self, entity_name, step_path):
