@@ -22,7 +22,7 @@ def get_curr_run_id():
 def get_sinara_step_tmp_path():
     return f"{os.getcwd()}/tmp"
 
-def save_bentoservice( bentoservice, bentoservice_info ):
+def save_bentoservice( bentoservice, *, path, service_version ):
     
     # Correct 'ensure_python' method in bentoml-init.sh
     def fix_bentoml_013_2(filepath):
@@ -38,14 +38,12 @@ def save_bentoservice( bentoservice, bentoservice_info ):
 
     ''' save to fs model packed as a BentoService Python object '''
     
-    outputs = bentoservice_info[0]
-    bento_entity_name = bentoservice_info[1]
-    bentoservice_fullname = getattr(outputs, f'_{bento_entity_name}')
-    fspath = getattr(outputs, bento_entity_name)
-
-    save_info = [f'BENTO_SERVICE={bentoservice_fullname}']
+    fspath = path
     
-    print(save_info)
+    if service_version:
+        save_info = [f'BENTO_SERVICE={service_version}']
+    else:
+        raise Exception("Service version could not be empty!")
     
     #write bento service to tmp dir
     runid = get_curr_run_id()

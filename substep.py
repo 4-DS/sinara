@@ -192,7 +192,10 @@ class DSMLUrls:
     DSMLUrls is base class for objects that contain URLs of Data Entities
     DSMLUrls objects are created via methods of DSMLModule 
     """
-    pass
+        
+    def fullname(self, entity_name):
+        full_entity_name = f'full_{entity_name}'
+        return getattr(self, full_entity_name)
 
 def default_param_values(params_file_name):
     params = {}
@@ -871,7 +874,7 @@ class NotebookSubstep:
 
             entity_url, entity_fullname = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'inputs')
 
-            registered_inputs_info.append((f'_{entity_name}', str, dataclasses.field(default=entity_fullname)))
+            registered_inputs_info.append((f'full_{entity_name}', str, dataclasses.field(default=entity_fullname)))
             registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
 
             
@@ -900,7 +903,7 @@ class NotebookSubstep:
             
             entity_url, entity_fullname = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'outputs')
 
-            registered_outputs_info.append((f'_{entity_name}', str, dataclasses.field(default=entity_fullname)))
+            registered_outputs_info.append((f'full_{entity_name}', str, dataclasses.field(default=entity_fullname)))
             registered_outputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
             
             
