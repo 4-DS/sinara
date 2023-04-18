@@ -76,6 +76,35 @@ def save_bentoservice( bentoservice, *, path, service_version ):
     
     #remove zip file from tmp
     os.remove(f"{bentoservice_zipfile}.zip")
+    
+def load_bentoservice(path):
+
+    # read zip file from dir
+    runid = get_curr_run_id()
+    bentoservice_name = os.path.basename(path)
+    tmppath = get_sinara_step_tmp_path()
+    bentoservice_zipfile =  f"{tmppath}/{runid}_{bentoservice_name}.model.zip"
+    bentoservice_zipfile_crc = f"{tmppath}/.{runid}_{bentoservice_name}.model.zip.crc"
+    
+    fs = SinaraFileSystem.FileSystem()
+    if not fs.exists(f"{path}/_SUCCESS"):
+        raise Exception("There is no _SUCCESS file for '{path}'")
+    
+    fs.get(f"{path}/model.zip", bentoservice_zipfile)
+    
+    # unpack zip archive   
+    bentoservice_dir = f"{tmppath}/{runid}/{bentoservice_name}"
+    shutil.unpack_archive(bentoservice_zipfile, bentoservice_dir)
+        
+    # remove zip file from tmp
+    os.remove(bentoservice_zipfile)
+    try:
+        os.remove(bentoservice_zipfile_crc)
+    except:
+        pass #crc file doesn't exisis
+    
+    #load bentoml service
+    return bentoml.load_from_dir(bentoservice_dir)
 
 def start_dev_bentoservice( bentoservice ):
    #fix of bentoservice import bug
