@@ -20,8 +20,7 @@ def get_sinara_version():
     return "0.0.1"
 
 class StopExecution(Exception):
-    def _render_traceback_(self):
-        pass
+    pass
 
 def isnotebook():
     try:

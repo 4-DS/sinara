@@ -6,7 +6,7 @@ import shutil
 import sys
 import logging
 from .substep import get_curr_run_id, reset_curr_run_id, set_curr_notebook_name, set_curr_notebook_output_name, get_curr_notebook_name,\
-    get_sinara_step_tmp_path, get_tmp_prepared
+    get_sinara_step_tmp_path, get_tmp_prepared, StopExecution
 #from .report_publisher import ReportPublisher
 from .substep import print_line_as_bold, ipynb_to_html
 import fnmatch
@@ -114,9 +114,12 @@ class Step:
                 return filenames[int(index)]
     
     def handle_exception(self, e):
-        self.exit_code = 1
+        if isinstance(e, StopExecution):
+            self.exit_code = 254
+        else:
+            self.exit_code = 1
+            print(e)
         self._curr_exception = e
-        print(e)
     
     def handle_exit(self):
          sys.exit(self.exit_code)
@@ -275,10 +278,15 @@ class SinaraStepNotebook(SinaraStepModule):
         #    print_line_as_bold('\033[1m' + f"WARNING: conda_env '{kernel_name_param}' not exists in kernels, running defaut kernel '{kernel_name}'" + '\033[0m')
         #    kernel_name_param = kernel_name
             
-        nn = papermill.execute.execute_notebook(temp_nb_name,
-                                                    commit_report_path,
-                                                    #kernel_name=kernel_name_param,
-                                                    parameters=params)
+        try:
+            nn = papermill.execute.execute_notebook(temp_nb_name,
+                                                        commit_report_path,
+                                                        #kernel_name=kernel_name_param,
+                                                        parameters=params)
+        except Exception as e:
+            if hasattr(e, 'ename') and e.ename == 'StopExecution':
+                raise StopExecution
+            raise e
 
         #finally:
         import pathlib
