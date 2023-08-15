@@ -53,9 +53,21 @@ def save_bentoservice( bentoservice, *, path, service_version ):
     bentoservice_dir = f"{tmppath}/{runid}/{bentoservice_name}"
     
     shutil.rmtree(bentoservice_dir, ignore_errors=True)
-    os.makedirs(bentoservice_dir, exist_ok=True) 
+    os.makedirs(bentoservice_dir, exist_ok=True)
     
+    bentoservice.set_version(service_version)
     bentoservice.save_to_dir(bentoservice_dir)
+    
+    SERVICE_VERSION_TEXT = '''
+    @bentoml.api()
+    def service_version(self):
+        return self.version
+    '''
+    if not hasattr(bentoservice, 'service_version'):
+        bentoservice_file = os.path.join(bentoservice_dir, bentoservice.__class__.__name__, 'bentoservice.py')
+        with open(bentoservice_file, 'a') as f:
+            f.write(SERVICE_VERSION_TEXT)
+        
     fix_bentoml_013_2(f'{bentoservice_dir}/bentoml-init.sh')
 
     save_info_file = os.path.join(bentoservice_dir, 'save_info.txt')
