@@ -118,11 +118,15 @@ class Step:
             self.exit_code = 254
         else:
             self.exit_code = 1
-            print(e)
         self._curr_exception = e
     
     def handle_exit(self):
-         sys.exit(self.exit_code)
+        # Suppress papermill exception on sys.exit() - kernel specific bug
+        # See https://github.com/nteract/papermill/issues/536
+        try:
+            sys.exit(self.exit_code)
+        except:
+            pass
         
     @staticmethod
     def clear_cache():
@@ -236,6 +240,26 @@ class SinaraStepNotebook(SinaraStepModule):
                 raise Exception(f"SINARA notebook requires a cell tagged by tag:'{tag}'")
 
     def run(self):
+        def _get_jupyter_kernel_name():
+            desired_kernel = None
+            if "kernel_name" in params["step_params"]:
+                desired_kernel = params["step_params"]["kernel_name"]
+            elif "kernel_name" in params["pipeline_params"]:
+                desired_kernel = params["pipeline_params"]["kernel_name"]
+                
+            import jupyter_client
+            available_kernels = jupyter_client.kernelspec.find_kernel_specs()
+            if available_kernels:
+                default_kernel = next(iter(available_kernels))
+                if desired_kernel and desired_kernel in available_kernels:
+                    return desired_kernel
+                elif desired_kernel and desired_kernel not in available_kernels:
+                    print_line_as_bold(f"WARNING: kernel '{desired_kernel}' is not installed, using defaut kernel '{default_kernel}'")
+                return default_kernel
+            else:
+                print_line_as_bold(f"WARNING: no kernels are installed")
+                return None
+        
         self.parse()
         
         #self._clear_source_by_tag("params")
@@ -279,9 +303,10 @@ class SinaraStepNotebook(SinaraStepModule):
         #    kernel_name_param = kernel_name
             
         try:
+            jupyter_kernel_name = _get_jupyter_kernel_name()
             nn = papermill.execute.execute_notebook(temp_nb_name,
                                                         commit_report_path,
-                                                        #kernel_name=kernel_name_param,
+                                                        kernel_name=jupyter_kernel_name,
                                                         parameters=params)
         except Exception as e:
             if hasattr(e, 'ename') and e.ename == 'StopExecution':
@@ -624,9 +649,10 @@ def create_business_report_summary(runinfo_dict):
 
     # specify header
     header_params = {
-        "product_name": runinfo_dict["run_params"]["product_name"],
-        "Step_name": runinfo_dict["Step_name"],
-        "commit": runinfo_dict["commit"]
+        "product_name": runinfo_dict["pipeline_params"]["pipeline_name"],
+        "Step_name": runinfo_dict["step_name"],
+        #TODO: enable commit saving
+        "commit": 'None'
     }
     header_template = business_report_cell["source"][HEADER_INDEX]
     header = header_template.format(**header_params)
