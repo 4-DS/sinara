@@ -14,6 +14,8 @@ import sys, traceback
 from IPython.core.display import Markdown, display
 
 from .fs import SinaraFileSystem
+from .env import get_cache_paths, get_cache_path
+
 import logging
 
 def get_sinara_version():
@@ -75,23 +77,6 @@ def get_tmp_prepared():
                 shutil.rmtree(tmp_path)
         
         os.makedirs(get_sinara_component_tmp_path())
-        
-        
-def get_cache_paths():
-    cache_paths = {
-        "test": "/data/cache/test",
-        "prod": "/data/cache/prod",
-        "user": "/data/cache/user"
-    }
-    return cache_paths
-
-def get_cache_path(env_name):
-    
-    env_paths = get_cache_paths()
-    if env_name not in env_paths:
-        raise Exception("Unexpected env_name value:" + env_name)
-
-    return env_paths[env_name]
 
 
 def print_line_as_bold(str):
@@ -248,6 +233,8 @@ class NotebookSubstep:
         self._substeps_params = substeps_params
         
         self._run_id = get_curr_run_id()
+        self._metrics = {}
+        self._metrics["run_id"] = get_curr_run_id()
         self._env_name = pipeline_params.get("env_name") or default_env_name
         self._pipeline_name = pipeline_params.get("pipeline_name") or default_pipeline_name
         #if not self._pipeline_name:
@@ -364,6 +351,21 @@ class NotebookSubstep:
         env_path = get_cache_path(self._env_name)
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
 
+    def save_metrics(self):
+        metrics_url, metrics_entity_name = self.make_data_url(self._step_name, self._env_name, self._pipeline_name, self._zone_name, f"metrics.{get_curr_notebook_name()}", self._run_id, 'outputs')
+        metrics_full_url = os.path.join(metrics_url, f'{metrics_entity_name}.json')
+        if len(self.metrics) > 1:
+            os.makedirs(metrics_url, exist_ok=True)
+            with open(metrics_full_url, 'w') as outfile:
+                json.dump(self.metrics, outfile)
+            from .store import SinaraStore
+            SinaraStore.write_entity(metrics_full_url, metrics_full_url)
+            
+    def add_metric(self, metric_name, metric_value):
+        self._metrics[metric_name] = metric_value
+        
+    def print_metrics(self):
+        pp.pprint(self._metrics)
     
     def _serialize_run(
             self,
@@ -423,6 +425,8 @@ class NotebookSubstep:
 
         with open(run_info_file_name, 'w') as outfile:
             json.dump(run_info, outfile)
+            
+        self.save_metrics()
 
 
     def _get_runinfo(self):
@@ -541,6 +545,16 @@ class NotebookSubstep:
             print_line_as_bold("TMP OUTPUTS:")
             pp.pprint(self._tmp_outputs_for_print)
             print("\n")
+            
+    @property
+    def metrics_dataframe(self):
+        """Returns metrics as pandas dataframe"""
+        return DSMLComponentMetrics.read_metrics()
+    
+    @property
+    def metrics(self):
+        """Returns copy of metrics"""
+        return self._metrics.copy()
     
     @property
     def env_name(self):
@@ -1012,3 +1026,38 @@ class NotebookSubstep:
         #pp.pprint(registered_tmp_outputs)
         #print("\n")
         return registered_tmp_outputs
+    
+class DSMLMetrics:
+
+    @staticmethod
+    def save_tmp_metrics(metrics):
+        tmp_path = get_sinara_component_tmp_path()
+        otput_nb_stem = Path(get_curr_notebook_output_name()).stem
+        metrics_file_name = f"{tmp_path}/{otput_nb_stem}.metrics.json"
+        print(f'save metric tmp file: {metrics_file_name}')
+        with open(metrics_file_name, 'w') as outfile:
+            json.dump(metrics, outfile)
+
+    @staticmethod
+    def read_tmp_metrics():
+        df_list = []
+        tmp_path = get_sinara_component_tmp_path()
+        for _file in glob.glob(tmp_path + '/' + f'*metrics.json'):
+            if os.path.isfile(_file):
+                with open(_file, 'r') as f:
+                    data = json.loads(f.read())
+                df = pd.json_normalize(data)
+                df_list.append(df)
+        result = pd.concat(df_list)
+        
+        from dateutil.parser import parse
+        
+        for col in result:
+            try:
+                parse(result[col].values[0], fuzzy=False)
+                result[col] = pd.to_datetime(result[col])
+            except ValueError:
+                pass
+            except TypeError:
+                pass
+        return result

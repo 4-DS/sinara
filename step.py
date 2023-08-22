@@ -118,15 +118,14 @@ class Step:
             self.exit_code = 254
         else:
             self.exit_code = 1
+            print(e)
         self._curr_exception = e
     
     def handle_exit(self):
-        # Suppress papermill exception on sys.exit() - kernel specific bug
-        # See https://github.com/nteract/papermill/issues/536
-        try:
+        ''' Sets correct exit code '''
+        # Suppress exception on sys.exit(0) - happens only in ipython
+        if not interpreter_is_ipython():
             sys.exit(self.exit_code)
-        except:
-            pass
         
     @staticmethod
     def clear_cache():
@@ -684,6 +683,11 @@ def create_business_report_summary(runinfo_dict):
 
     return business_report_cell        
 
+def interpreter_is_ipython():
+    try:
+        return bool(__IPYTHON__)
+    except NameError:
+        return False
 
 class StepSafeguard:
     

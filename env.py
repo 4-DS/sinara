@@ -1,10 +1,8 @@
-
-
 def get_cache_paths():
     cache_paths = {
-        "test": "/home/jupyter/work/resources/data/cache/test",
-        "prod": "/home/jupyter/work/resources/data/cache/prod",
-        "user": "/home/jupyter/work/resources/data/cache/user"
+        "test": "/data/cache/test",
+        "prod": "/data/cache/prod",
+        "user": "/data/cache/user"
     }
     return cache_paths
 
