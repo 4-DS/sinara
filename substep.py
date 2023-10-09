@@ -14,7 +14,7 @@ import sys, traceback
 from IPython.core.display import Markdown, display
 
 from .fs import SinaraFileSystem
-from .env import get_cache_paths, get_cache_path
+from .infra import get_temp_path, get_env_path
 
 import logging
 
@@ -127,29 +127,6 @@ def reset_curr_run_id():
     os.environ["DSML_CURR_RUN_ID"] = run_id
     return run_id
 
-def get_user():
-    return os.getenv("DSML_USER") or 'jovyan'
-
-def get_data_paths():
-    data_paths = {
-        "test": "/data/products",
-        "prod": "/data/production",
-        "user": f"/data/home/{get_user()}"
-    }
-    
-    custom_data_paths = {}
-    if os.path.isfile("sinara/infra/env.json"):
-        with open("sinara/infra/env.json") as json_file:
-            custom_data_paths = json.load(json_file)
-
-        data_paths = {**data_paths,**custom_data_paths}
-    return data_paths
-
-def get_env_path(env_name):
-    env_paths = get_data_paths()
-    if env_name not in env_paths:
-        raise Exception("Unexpected env_name value:" + env_name)
-    return env_paths[env_name]
 
 ENV_NAME = 'ENV_NAME'
 PIPELINE_NAME = 'PIPELINE_NAME'
@@ -343,12 +320,12 @@ class NotebookSubstep:
 
     def _cache_url(self):
         """Returns local path where managed cached entities are stored for current run"""
-        env_path = get_cache_path(self._env_name)
+        env_path = get_temp_path(self._env_name)
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}/{self._run_id}"
 
     def _step_cache_url(self):
         """Returns local path where managed cached entities are stored for current component"""
-        env_path = get_cache_path(self._env_name)
+        env_path = get_temp_path(self._env_name)
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
 
     def save_metrics(self):
