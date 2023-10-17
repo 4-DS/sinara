@@ -166,6 +166,8 @@ def default_param_values(params_file_name):
     default_pipeline_name = params["pipeline_params"].get("pipeline_name")
     if not default_pipeline_name:
         raise Exception(f"In the file {params_file_name} 'pipeline_name' param is not defined. It's mandatory. ")
+        
+    default_zone_name = params["pipeline_params"].get("zone_name")
 
     default_step_name = params["step_params"].get("step_name")
     if not default_step_name:
@@ -173,6 +175,7 @@ def default_param_values(params_file_name):
     
     return {
             "default_pipeline_name": default_pipeline_name,
+            "default_zone_name": default_zone_name,
             "default_step_name": default_step_name
         }
 
