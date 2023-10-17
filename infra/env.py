@@ -1,21 +1,20 @@
 import json
 import os
 
-def get_cache_paths():
-    cache_paths = {
+def get_tmp_paths():
+    return {
         "test": "/data/tmp/test",
         "prod": "/data/tmp/prod",
         "user": "/data/tmp/user"
     }
-    return cache_paths
-
-def get_cache_path(env_name):
     
-    env_paths = get_cache_paths()
-    if env_name not in env_paths:
+def get_tmp_path(env_name):
+    
+    tmp_paths = get_tmp_paths()
+    if env_name not in tmp_paths:
         raise Exception("Unexpected env_name value:" + env_name)
 
-    return env_paths[env_name]
+    return tmp_paths[env_name]
 
 def get_user():
     return os.getenv("DSML_USER") or 'jovyan'

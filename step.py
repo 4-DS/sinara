@@ -48,11 +48,11 @@ class Step:
         substeps_params = get_run_papermill_params()["substeps_params"]
 
         print_line_as_bold(f"SINARA Step params:")
-        run_paremeters_to_print = copy.deepcopy(get_run_papermill_params()["pipeline_params"])
+        run_parameters_to_print = copy.deepcopy(get_run_papermill_params()["pipeline_params"])
 
         if env_name is not None:
-            run_paremeters_to_print["env_name"] = env_name
-        pprint.pprint(run_paremeters_to_print, compact=True)
+            run_parameters_to_print["env_name"] = env_name
+        pprint.pprint(run_parameters_to_print, compact=True)
         print("\n")
         
         try:
@@ -65,7 +65,7 @@ class Step:
                             self.notebooks.append(SinaraStepNotebook(nb, env_name = env_name))
                     elif type(nb) is dict:
                         name = nb["substep_name"]
-                        params = nb["params"]
+                        params = nb["substep_params"]
                         if '.py' in name:
                             self.notebooks.append(SinaraStepPythonModule(name, 
                                                                     sent_params = params,
@@ -217,8 +217,8 @@ class SinaraStepNotebook(SinaraStepModule):
         self.tagged_known_cells = {}
         self.output_nb_dict = self.input_nb_dict.copy()
 
-        known_tags = ["params"]
-        musthave_tags = ["params"]
+        known_tags = ["parameters"]
+        musthave_tags = ["parameters"]
 
         # fill in the tagged_known_cells
         for cell in self.input_nb_dict["cells"]:
@@ -261,7 +261,7 @@ class SinaraStepNotebook(SinaraStepModule):
         
         self.parse()
         
-        #self._clear_source_by_tag("params")
+        self._clear_source_by_tag("parameters")
 
         self.output_nb_name = self._get_output_notebook_name()
         self._append_serialize_run_cell()
@@ -274,11 +274,11 @@ class SinaraStepNotebook(SinaraStepModule):
 
         
         params = get_papermill_params(self.nb_params_name, 
-                                              self.sent_params,
-                                              self.replace_params_file,
-                                              self.external_entity_catalogue,
-                                              self.stand_name,
-                                              self.env_name)
+                                      self.sent_params,
+                                      self.replace_params_file,
+                                      self.external_entity_catalogue,
+                                      self.stand_name,
+                                      self.env_name)
         
         import papermill
 
@@ -288,6 +288,7 @@ class SinaraStepNotebook(SinaraStepModule):
         set_curr_notebook_output_name(self.output_nb_name)
         
         print_line_as_bold(f"SINARA Notebook params for {self.input_nb_name}:")
+        pprint.pprint(params, compact=True)
         pprint.pprint(params["params"], compact=True)
         
         #try:
@@ -343,9 +344,9 @@ class SinaraStepNotebook(SinaraStepModule):
         
         print_line_as_bold("SINARA Notebook requirements:")
         print( '''\
-        1. Notebook must contain separated cell tagged as "params"
+        1. Notebook must contain separated cell tagged as "parameters"
         2. Notebook must contain the initialized variables:
-            - substep_params(dict) and pipeline_params(dict) inside a cell tagged as params 
+            - substep_params(dict) and pipeline_params(dict) inside a cell tagged as "parameters" 
             - inputs(dict)
             - outputs (dict)
         3. substep_params, pipeline_params, inputs, outputs must not be changed after the initilization
@@ -536,7 +537,7 @@ def get_papermill_params(
     
     if replace_params_file:
         # full params file format support
-        papermill_params["params"] = sent_params
+        papermill_params["substep_params"] = sent_params
     else:
         #for backward compatibility when separate file is defined for each notebook
         with open(ci_params_file_name) as json_file:
@@ -623,8 +624,10 @@ def write_business_report(nb_commit_report,
 
 def create_business_report_summary(runinfo_dict):
     # define business report temaple
+    import uuid
     business_report_cell = {
         "cell_type": "markdown",
+        "id": str(uuid.uuid4()),
         "metadata": {},
         "source": [
             "#### Компонент {product_name}/{Step_name}/{commit} удачно собран и проверен\n",
