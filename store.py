@@ -33,7 +33,7 @@ class SinaraStore:
         fs.touch(fs_folder_path + '/' + '_SUCCESS')
     
     @staticmethod
-    def copy_tmp_files_to_store(tmp_dir=str, store_dir=str, file_globs=[]):
+    def copy_tmp_files_to_store(tmp_dir=str, store_dir=str, file_globs=["*"]):
         """
             upload list of files from data temporary directory to store
             subfolders are not supported
@@ -54,6 +54,31 @@ class SinaraStore:
             fs.put(tmp_file_path, store_file_path)
         
         fs.touch(store_dir + '/' + '_SUCCESS')
+        
+    @staticmethod
+    def copy_store_files_to_tmp(store_dir=str, tmp_dir=str, file_globs=["*"]):
+        """
+            download list of files from data temporary directory to store
+            subfolders are not supported
+        """ 
+        if isinstance(file_globs, str):
+            file_globs = [file_globs]
+        
+        fs = SinaraFileSystem.FileSystem()
+        
+        filenames = []
+        for gl in file_globs:
+            filenames += fs.glob(str(Path(store_dir, gl)))
+        filenames = [ x for x in filenames if not x.endswith("_SUCCESS") ]
+        if len(filenames) == 0:
+            raise Exception("file_globs doesn't match any file")
+        
+        # store_globs = fs.glob(store_dir)
+        # makedirs(tmp_dir, exist_ok=True)
+        fs.makedirs(tmp_dir)
+        for store_file_path in filenames:
+            tmp_file_path = str(Path(tmp_dir, Path(store_file_path).name))
+            fs.get(store_file_path, tmp_file_path)
         
     @staticmethod
     def copy_store_dir_to_tmp(store_dir=str, tmp_dir=str):
