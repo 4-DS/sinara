@@ -43,15 +43,15 @@ class SinaraStore:
             
         filenames = []
         for gl in file_globs:
-            filenames += glob.glob(str(Path(cache_dir, gl)))
+            filenames += glob.glob(str(Path(tmp_dir, gl)))
         if len(filenames) == 0:
             raise Exception("file_globs doesn't match any file")
         
         fs = SinaraFileSystem.FileSystem()
         fs.makedirs(store_dir)
-        for cache_file_path in filenames:
-            store_file_path = str(Path(store_dir, Path(cache_file_path).name))
-            fs.put(cache_file_path, store_file_path)
+        for tmp_file_path in filenames:
+            store_file_path = str(Path(store_dir, Path(tmp_file_path).name))
+            fs.put(tmp_file_path, store_file_path)
         
         fs.touch(store_dir + '/' + '_SUCCESS')
         
