@@ -69,7 +69,6 @@ class SinaraStore:
         filenames = []
         for gl in file_globs:
             filenames += fs.glob(str(Path(store_dir, gl)))
-        filenames = [ x for x in filenames if not x.endswith("_SUCCESS") ]
         if len(filenames) == 0:
             raise Exception("file_globs doesn't match any file")
         
