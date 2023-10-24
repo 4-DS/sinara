@@ -4,11 +4,11 @@ import sys
 sys.path.append('../../sinara')
 
 # importing
-from sinara.config.config import _SinaraConfig
+from sinara.settings.settings import _SinaraSettings
 
 import json
 import os
-class SinaraConfig(_SinaraConfig):
+class SinaraSettings(_SinaraSettings):
     def get_tmp_paths():
         return {
             "test": "/data/tmp/test",
@@ -18,7 +18,7 @@ class SinaraConfig(_SinaraConfig):
 
     def get_tmp_path(env_name):
 
-        tmp_paths = SinaraConfig.get_tmp_paths()
+        tmp_paths = SinaraSettings.get_tmp_paths()
         if env_name not in tmp_paths:
             raise Exception("Unexpected env_name value:" + env_name)
 
@@ -31,11 +31,11 @@ class SinaraConfig(_SinaraConfig):
         data_paths = {
             "test": "/data/products",
             "prod": "/data/production",
-            "user": f"/data/home/{SinaraConfig.get_user()}"
+            "user": f"/data/home/{SinaraSettings.get_user()}"
         }
 
         custom_data_paths = {}
-        custom_config_path = f"sinara/infra/{os.environ['INFRA_NAME']}/config/env.json"
+        custom_config_path = f"sinara/infra/{os.environ['INFRA_NAME']}/settings/env.json"
         if os.path.isfile(custom_config_path):            
             with open(custom_config_path) as json_file:
                 custom_data_paths = json.load(json_file)
@@ -44,7 +44,7 @@ class SinaraConfig(_SinaraConfig):
         return data_paths
 
     def get_env_path(env_name):
-        env_paths = SinaraConfig.get_data_paths()
+        env_paths = SinaraSettings.get_data_paths()
         if env_name not in env_paths:
             raise Exception("Unexpected env_name value:" + env_name)
         return env_paths[env_name]
