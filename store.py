@@ -1,6 +1,4 @@
-#from sinara.common import importSinaraModuleClass
-#SinaraFileSystem = importSinaraModuleClass(module_name = "fs", class_name = "SinaraFileSystem")
-from fs import SinaraFileSystem
+from .fs import SinaraFileSystem
 from os import path, makedirs
 from pathlib import Path
 import tarfile

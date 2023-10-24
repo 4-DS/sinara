@@ -15,10 +15,8 @@ import sys, traceback
 
 from IPython.core.display import Markdown, display
 
-#SinaraFileSystem = importSinaraModuleClass(module_name = "fs", class_name = "SinaraFileSystem")
 from .fs import SinaraFileSystem
 from .settings import SinaraSettings
-#SinaraSettings = importSinaraModuleClass(module_name = "settings", class_name = "SinaraSettings")
 
 import logging
 
