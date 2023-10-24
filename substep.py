@@ -1,4 +1,6 @@
 import os
+from sinara.common import importSinaraModuleClass
+
 from datetime import datetime
 from pathlib import Path
 
@@ -13,8 +15,8 @@ import sys, traceback
 
 from IPython.core.display import Markdown, display
 
-from .fs import SinaraFileSystem
-from .infra import get_temp_path, get_env_path
+SinaraFileSystem = importSinaraModuleClass(module_name = "fs", class_name = "SinaraFileSystem")
+SinaraConfig = importSinaraModuleClass(module_name = "config", class_name = "SinaraConfig")
 
 import logging
 
@@ -307,7 +309,7 @@ class NotebookSubstep:
     
     def _artifacts_url(self):
         """Returns hdfs path where all artifact entities are stored"""
-        env_path = get_env_path(self._env_name)
+        env_path = SinaraConfig.get_env_path(self._env_name)
         artifacts_url = f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}/{self._run_id}"
         return artifacts_url
 
@@ -318,17 +320,17 @@ class NotebookSubstep:
 
     def _component_cache_url(self):
         """Returns local path where managed cached entities are stored for current component"""
-        env_path = get_env_path(self._env_name)
+        env_path = SinaraConfig.get_env_path(self._env_name)
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
 
     def _cache_url(self):
         """Returns local path where managed cached entities are stored for current run"""
-        env_path = get_temp_path(self._env_name)
+        env_path = SinaraConfig.get_tmp_path(self._env_name)
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}/{self._run_id}"
 
     def _step_cache_url(self):
         """Returns local path where managed cached entities are stored for current component"""
-        env_path = get_temp_path(self._env_name)
+        env_path = SinaraConfig.get_tmp_path(self._env_name)
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
 
     def save_metrics(self):
@@ -575,7 +577,7 @@ class NotebookSubstep:
 
         if "DESIGN_MODE" in os.environ:
             return entity_name
-
+        
         fs = SinaraFileSystem.FileSystem()
 
         entity_paths = fs.glob(f"{step_path}/*/{entity_name}/_SUCCESS")
@@ -589,7 +591,7 @@ class NotebookSubstep:
 
     def last_run_id(self, step_name, env_name, pipeline_name, zone_name, entity_name):
         
-        env_path = get_env_path(env_name)
+        env_path = SinaraConfig.get_env_path(env_name)
         
         #print(env_path)
         
@@ -611,7 +613,7 @@ class NotebookSubstep:
         entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
 
      
-        env_path = get_env_path(env_name)
+        env_path = SinaraConfig.get_env_path(env_name)
         entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
         
         if data_type == 'inputs':
@@ -701,7 +703,7 @@ class NotebookSubstep:
         entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
 
      
-        env_path = get_env_path(env_name)
+        env_path = SinaraConfig.get_env_path(env_name)
         entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
         
         if data_type == 'inputs':
@@ -714,7 +716,7 @@ class NotebookSubstep:
             entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
 
      
-            env_path = get_env_path(env_name)
+            env_path = SinaraConfig.get_env_path(env_name)
             entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
         
 
@@ -729,7 +731,7 @@ class NotebookSubstep:
             entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
 
      
-            env_path = get_env_path(env_name)
+            env_path = SinaraConfig.get_env_path(env_name)
             entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
         
             return {entity_full_name: entity_url }
