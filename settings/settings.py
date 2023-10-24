@@ -2,7 +2,7 @@ from abc import (
   ABC,
   abstractmethod,
 )
-class _SinaraConfig(ABC):
+class _SinaraSettings(ABC):
     
     @staticmethod
     @abstractmethod
