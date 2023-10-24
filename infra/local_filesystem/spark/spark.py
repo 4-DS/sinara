@@ -28,7 +28,7 @@ class SinaraSpark(_SinaraSpark):
 
     
     @staticmethod
-    def run_session(clusterSize=0 , app="my app", conf=None, reuse_session=True):
+    def run_session(clusterSize=0 , app="my app", conf=None, reuse_session=True, debug=True):
         SinaraSpark.stop_session()
         print("Session is run")
         
