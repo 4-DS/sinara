@@ -407,7 +407,6 @@ class NotebookSubstep:
             json.dump(run_info, outfile)
             
         self.save_metrics()
-        self._success_tmp_outputs()
 
     def _get_runinfo(self):
         """Returns current run_info"""
@@ -651,23 +650,18 @@ class NotebookSubstep:
         # user are supposed to create either file or folder as an entity.
         self._validate_entity_name(entity_name)
         entity_full_name = f"cache:{self._artifact_full_name(entity_name)}"
+        entity_url = f"{self._cache_url()}/{entity_name}"
         try:
-            os.makedirs(self._cache_url())
+            os.makedirs(entity_url)
         except:
             pass
-        entity_url = f"{self._cache_url()}/{entity_name}"
         
         self.registered_tmp_outputs[entity_full_name] = entity_url
         return entity_url
-
     
-
-    def make_tmp_input_url(self, entity_name):
-        
-        
-        """Registers existed cache entity and returns URL for it """
+    def _get_tmp_input_url(self, entity_name):
+        """Find last run for tmp entity and return it's url"""
         self._validate_entity_name(entity_name)
-        entity_full_name = f"cache:{self._artifact_full_name(entity_name)}"
 
         entity_paths = glob.glob(f"{self._step_cache_url()}/*/{entity_name}")
 
@@ -679,8 +673,13 @@ class NotebookSubstep:
             raise Exception(f"There is no an entity for path: '{self._step_cache_url()}/*/{entity_name}' ")
 
         entity_url = f"{self._step_cache_url()}/{last_run_id}/{entity_name}"
-        self.registered_tmp_inputs[entity_full_name] = entity_url
+        return entity_url
 
+    def make_tmp_input_url(self, entity_name):
+        """Registers existed cache entity and returns URL for it """
+        entity_url = self._get_tmp_input_url(entity_name)
+        entity_full_name = f"cache:{self._artifact_full_name(entity_name)}"
+        self.registered_tmp_inputs[entity_full_name] = entity_url
         return entity_url
     
     def _get_entity_full_name(self, step_name, env_name, pipeline_name, zone_name, entity_name):
@@ -733,7 +732,6 @@ class NotebookSubstep:
             env_path = get_env_path(env_name)
             entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
         
-            
             return {entity_full_name: entity_url }
         
         elif data_type == 'custom_inputs':
@@ -742,19 +740,18 @@ class NotebookSubstep:
             return {entity_name: entity_url}
             
         elif data_type == 'custom_outputs':
-            
             entity_url = entity.get(ENTITY_PATH, None)
-
             return {entity_name: entity_url}
+        
+        elif data_type == 'tmp_inputs':
+            entity_url = self._get_tmp_input_url(entity_name)
+            return {f'tmp:{entity_full_name}': entity_url }
+           
+        elif data_type == 'tmp_outputs':
+            entity_url = f"{self._cache_url()}/{entity_name}"
+            return {f'tmp:{entity_full_name}': entity_url }
 
         
-        elif data_type == 'tmp_inputs' or data_type == 'tmp_outputs':
-            entity_url = f"{self._cache_url()}/{entity_name}"
-            
-            return {f'cache:{entity_full_name}': entity_url }
-
-
-    
     def _validate_entity_name(self, entity_name):
         """Checks allowed symbols of entity name and raise exeption for non-valid name"""
         if entity_name.find('/') != -1:
