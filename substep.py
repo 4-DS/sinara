@@ -407,7 +407,7 @@ class NotebookSubstep:
             json.dump(run_info, outfile)
             
         self.save_metrics()
-
+        self._success_tmp_outputs()
 
     def _get_runinfo(self):
         """Returns current run_info"""
@@ -430,8 +430,15 @@ class NotebookSubstep:
         run_info["step_name"] = self._step_name
 
         return run_info
-
     
+    def _success_tmp_outputs(self):
+        tmp_outputs = self.tmp_outputs()
+        tmp_outputs_dict = {k: str(v) for k, v in dataclasses.asdict(tmp_outputs).items()}
+        for entity_name, tmp_entity_path in tmp_outputs_dict.items():
+            succ = Path(f'{tmp_entity_path}/_SUCCESS')
+            if Path(f'{tmp_entity_path}').is_dir() and not succ.is_file():
+                succ.touch()
+
     def interface(self, *,
                   inputs=[],
                   outputs=[],
