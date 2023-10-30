@@ -2,6 +2,7 @@ from .fs import SinaraFileSystem
 
 from os import path, makedirs
 from pathlib import Path
+import tarfile
 
 import glob
 
@@ -30,8 +31,17 @@ class SinaraStore:
         fs.put(file_path, store_file_path)
         
         # create SUCCESS file        
-        fs.touch(fs_folder_path + '/' + '_SUCCESS')
-    
+        fs.touch(Path(fs_folder_path, '_SUCCESS'))
+
+        
+    @staticmethod
+    def copy_tmp_coco_to_store(tmp_coco_path=str, store_path=str):
+        copy_tmp_files_to_store()
+
+    @staticmethod
+    def copy_store_coco_to_tmp(store_coco_path=str, tmp_path=str):
+        copy_tmp_files_to_store()
+        
     @staticmethod
     def copy_tmp_files_to_store(tmp_dir=str, store_dir=str, file_globs=["*"]):
         """
@@ -49,11 +59,19 @@ class SinaraStore:
         
         fs = SinaraFileSystem.FileSystem()
         fs.makedirs(store_dir)
-        for tmp_file_path in filenames:
-            store_file_path = str(Path(store_dir, Path(tmp_file_path).name))
-            fs.put(tmp_file_path, store_file_path)
+        # for tmp_file_path in filenames:
+        #     store_file_path = str(Path(store_dir, Path(tmp_file_path).name))
+        #     fs.put(tmp_file_path, store_file_path)
+        tar_file_path = f'{tmp_dir}/files.tar'
+        with tarfile.open(tar_file_path, 'w') as tar:
+            for tmp_file_path in filenames:
+                tar.add(tmp_file_path, arcname=tmp_file_path.replace(tmp_dir, ''))
+
+        store_file_path = str(Path(store_dir, Path(tar_file_path).name))
+        fs.put(tar_file_path, store_file_path)
+        fs.touch(Path(store_dir, '_SUCCESS'))
+        Path(tar_file_path).unlink()
         
-        fs.touch(store_dir + '/' + '_SUCCESS')
         
     @staticmethod
     def copy_store_files_to_tmp(store_dir=str, tmp_dir=str, file_globs=["*"]):
@@ -75,19 +93,12 @@ class SinaraStore:
         # store_globs = fs.glob(store_dir)
         # makedirs(tmp_dir, exist_ok=True)
         fs.makedirs(tmp_dir)
-        for store_file_path in filenames:
-            tmp_file_path = str(Path(tmp_dir, Path(store_file_path).name))
-            fs.get(store_file_path, tmp_file_path)
-        
-    @staticmethod
-    def copy_store_dir_to_tmp(store_dir=str, tmp_dir=str):
-        """ 
-            download file from directory on store to temporary local dir
-        """
-        fs = SinaraFileSystem.FileSystem()
-        
-        store_globs = fs.glob(store_dir)
-        makedirs(tmp_dir, exist_ok=True)
-        for store_file_path in store_globs:
-            tmp_file_path = str(Path(tmp_dir, Path(store_file_path).name))
-            fs.get(store_file_path, tmp_file_path)
+        # for store_file_path in filenames:
+        #     tmp_file_path = str(Path(tmp_dir, Path(store_file_path).name))
+        #     fs.get(store_file_path, tmp_file_path)
+        store_file_path = str(Path(store_dir, 'files.tar'))
+        tar_file_path = str(Path(tmp_dir, Path(store_file_path).name))
+        fs.get(store_file_path, tar_file_path)
+        with tarfile.open(tar_file_path) as tar:
+            tar.extractall(tmp_dir)
+        Path(tar_file_path).unlink()
