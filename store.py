@@ -14,25 +14,9 @@ class SinaraStore:
     When you run components locally, Sinara store is local disk or sometimes S3, depending on the options.
     
     SinaraStore provides:
-     - functions to download a file from store to temporary data
-     - functions to upload a file from temporary data to store
+     - functions to download a file from store to temporary data dir
+     - functions to upload a file from temporary data dir to store
     """
-
-    @staticmethod
-    def write_entity(file_path=str, store_file_path=str):
-        """
-            upload an entity to store
-        """
-        
-        fs = SinaraFileSystem.FileSystem()
-        fs_folder_path = path.dirname(store_file_path)
-        fs.makedirs(fs_folder_path)
-        
-        fs.put(file_path, store_file_path)
-        
-        # create SUCCESS file        
-        fs.touch(Path(fs_folder_path, '_SUCCESS'))
-
         
     @staticmethod
     def copy_tmp_coco_to_store(tmp_coco_path=str, store_path=str):
