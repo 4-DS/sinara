@@ -153,3 +153,16 @@ def start_dev_bentoservice( bentoservice, use_popen = False, debug = False ):
 def stop_dev_bentoservice( bentoservice ):
     bentoservice.stop_dev_server()
 
+def save_bentoartifact_to_tmp(bentoservice, 
+                               artifact_name="model", 
+                               artifact_file_path=""):
+    ''' save bentoservice artifact to local cache, bentoservice has to be loaded beforehand  '''
+    
+    if "." in os.path.basename(artifact_file_path):
+        os.makedirs(os.path.dirname(artifact_file_path), exist_ok = True)
+    else:
+    # Considering user wants to save an original artifact to directory instead of custom file path
+    # see artifacts/binary_artifacts.py for details
+        os.makedirs(artifact_file_path, exist_ok = True)
+    
+    bentoservice.artifacts[artifact_name].save(artifact_file_path)
