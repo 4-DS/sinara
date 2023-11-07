@@ -233,6 +233,7 @@ class NotebookSubstep:
         self._registered_custom_outputs = []
         self._registered_tmp_inputs = []
         self._registered_tmp_outputs = []
+        self._registered_tmp_entities = []
         
         
         
@@ -243,6 +244,8 @@ class NotebookSubstep:
         self.registered_tmp_inputs = {}
         
         self.registered_tmp_outputs = {}
+        
+        self.registered_tmp_entities = {}
 
 
         #self._commit = str(git.Repo().head.commit)[:8]  # TODO what if git isn't presented
@@ -423,7 +426,7 @@ class NotebookSubstep:
         run_info["substeps_params"] = self._substeps_params
         run_info["resources"] = self.registered_inputs
         run_info["artifacts"] = self.registered_outputs
-        run_info["cache"] = {**self.registered_tmp_inputs, **self.registered_tmp_outputs}
+        run_info["tmp"] = {**self.registered_tmp_inputs, **self.registered_tmp_outputs, **self.registered_tmp_entities}
         run_info["status"] = 'RUNNING'
         run_info["duration"] = f"{stop_time - start_time}"
         # TODO
@@ -431,14 +434,6 @@ class NotebookSubstep:
         run_info["step_name"] = self._step_name
 
         return run_info
-    
-    def _success_tmp_outputs(self):
-        tmp_outputs = self.tmp_outputs()
-        tmp_outputs_dict = {k: str(v) for k, v in dataclasses.asdict(tmp_outputs).items()}
-        for entity_name, tmp_entity_path in tmp_outputs_dict.items():
-            succ = Path(f'{tmp_entity_path}/_SUCCESS')
-            if Path(f'{tmp_entity_path}').is_dir() and not succ.is_file():
-                succ.touch()
 
     def interface(self, *,
                   inputs=[],
@@ -446,7 +441,8 @@ class NotebookSubstep:
                   custom_inputs=[],
                   custom_outputs=[],
                   tmp_inputs=[],
-                  tmp_outputs=[]
+                  tmp_outputs=[],
+                  tmp_entities=[]
                  ):
         
         self._registered_inputs = self._get_validated_interface_data(inputs,
@@ -500,6 +496,13 @@ class NotebookSubstep:
         self._tmp_outputs_for_print = [self.get_entity_for_print(entity, 'tmp_outputs') for entity in self._registered_tmp_outputs]
         
         
+        self._registered_tmp_entities = self._get_validated_interface_data(tmp_entities,
+                                                                          required_keys=[ENTITY_NAME],
+                                                                          available_keys=[ENTITY_NAME])
+        
+        self._tmp_entities_for_print = [self.get_entity_for_print(entity, 'tmp_entities') for entity in self._registered_tmp_entities]
+        
+        
         
     def print_interface_info(self):
         """Prints inputs, outputs, tmp urls and cache usage info"""
@@ -532,6 +535,11 @@ class NotebookSubstep:
         if self._tmp_outputs_for_print: 
             print_line_as_bold("TMP OUTPUTS:")
             pp.pprint(self._tmp_outputs_for_print)
+            print("\n")
+            
+        if self._tmp_entities_for_print: 
+            print_line_as_bold("TMP ENTITIES:")
+            pp.pprint(self._tmp_entities_for_print)
             print("\n")
             
     @property
@@ -701,7 +709,6 @@ class NotebookSubstep:
         entity_name = entity_name.replace(".", "_")
 
         entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
-
      
         env_path = SinaraSettings.get_env_path(env_name)
         entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
@@ -714,7 +721,6 @@ class NotebookSubstep:
             run_id = entity.get(RUN_ID) if entity.get(RUN_ID) else self.last_run_id(step_name, env_name, pipeline_name, zone_name, entity_name)
             
             entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
-
      
             env_path = SinaraSettings.get_env_path(env_name)
             entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
@@ -729,7 +735,6 @@ class NotebookSubstep:
             zone_name = entity.get(ZONE_NAME) if entity.get(ZONE_NAME) else self.zone_name
             
             entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
-
      
             env_path = SinaraSettings.get_env_path(env_name)
             entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
@@ -750,6 +755,10 @@ class NotebookSubstep:
             return {f'tmp:{entity_full_name}': entity_url }
            
         elif data_type == 'tmp_outputs':
+            entity_url = f"{self._cache_url()}/{entity_name}"
+            return {f'tmp:{entity_full_name}': entity_url }
+
+        elif data_type == 'tmp_entities':
             entity_url = f"{self._cache_url()}/{entity_name}"
             return {f'tmp:{entity_full_name}': entity_url }
 
@@ -811,8 +820,6 @@ class NotebookSubstep:
             
             if not _input.get(ZONE_NAME):
                 _input[ZONE_NAME] = input_zone_name
-            
-
                     
             input_of_step_name = (_input[STEP_NAME] == step_name)
             
@@ -876,8 +883,6 @@ class NotebookSubstep:
             registered_inputs_info.append((f'full_{entity_name}', str, dataclasses.field(default=entity_fullname)))
             registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
 
-            
-
         # python allows different classes with the same name
         registered_inputs = dataclasses.make_dataclass('InputUrls',
                                                         registered_inputs_info,
@@ -899,13 +904,10 @@ class NotebookSubstep:
             zone_name = zone_name if zone_name != "curr_zone_name" else self.zone_name
             run_id = self._run_id
            
-            
             entity_url, entity_fullname = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'outputs')
 
             registered_outputs_info.append((f'full_{entity_name}', str, dataclasses.field(default=entity_fullname)))
             registered_outputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
-            
-            
 
         # python allows different classes with the same name
         registered_outputs = dataclasses.make_dataclass('OutputUrls',
@@ -925,12 +927,8 @@ class NotebookSubstep:
         for _input in self._registered_custom_inputs:
             
             entity_name = _input.get(ENTITY_NAME)
-            
             entity_url = self.make_custom_data_url(_input, 'custom_inputs')
-
             registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
-            
-            
 
         # python allows different classes with the same name
         registered_inputs = dataclasses.make_dataclass('CustomInputUrls',
@@ -948,13 +946,8 @@ class NotebookSubstep:
         
         for _output in self._registered_custom_outputs:
             entity_name = _output.get(ENTITY_NAME)
-            
             entity_url = self.make_custom_data_url(_output, 'custom_outputs')
-
-
             registered_outputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
-            
-            
 
         # python allows different classes with the same name
         registered_outputs = dataclasses.make_dataclass('CustomOutputUrls',
@@ -973,13 +966,9 @@ class NotebookSubstep:
         for _tmp_input in self._registered_tmp_inputs:
             
             entity_name = _tmp_input.get(ENTITY_NAME)
-            
             entity_url = self.make_tmp_input_url(entity_name)
-
             registered_tmp_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
             
-            
-
         # python allows different classes with the same name
         registered_tmp_inputs = dataclasses.make_dataclass('TmpInputUrls',
                                                         registered_tmp_inputs_info,
@@ -997,13 +986,9 @@ class NotebookSubstep:
         for _tmp_output in self._registered_tmp_outputs:
             
             entity_name = _tmp_output.get(ENTITY_NAME)
-            
             entity_url = self.make_tmp_output_url(entity_name)
-
             registered_tmp_outputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
             
-            
-
         # python allows different classes with the same name
         registered_tmp_outputs = dataclasses.make_dataclass('TmpOutputUrls',
                                                         registered_tmp_outputs_info,
@@ -1012,6 +997,25 @@ class NotebookSubstep:
         #pp.pprint(registered_tmp_outputs)
         #print("\n")
         return registered_tmp_outputs
+    
+    def tmp_entities(self):     
+
+        registered_tmp_entities_info = []
+        
+        for _tmp_entity in self._registered_tmp_entities:
+            
+            entity_name = _tmp_entity.get(ENTITY_NAME)
+            
+            entity_url = self.make_tmp_output_url(entity_name)
+
+            registered_tmp_entities_info.append((entity_name, str, dataclasses.field(default=entity_url)))
+            
+        # python allows different classes with the same name
+        registered_tmp_entities = dataclasses.make_dataclass('TmpEntitiesUrls',
+                                                        registered_tmp_entities_info,
+                                                    bases=(DSMLUrls,),
+                                                    frozen=True)()
+        return registered_tmp_entities
     
 class DSMLMetrics:
 
