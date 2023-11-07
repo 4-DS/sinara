@@ -1,5 +1,4 @@
 from .fs import SinaraFileSystem
-
 from os import path, makedirs
 from pathlib import Path
 import tarfile

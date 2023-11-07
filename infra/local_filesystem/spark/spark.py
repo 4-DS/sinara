@@ -1,12 +1,18 @@
-import atexit
 from pyspark.sql import SparkSession
 from pyspark.context import SparkContext
 from pyspark.conf import SparkConf
 #from pyspark import SparkConf
 
 import socket
+import sys
+ 
+# setting Sinara abstract class
+sys.path.append('../../sinara')
 
-class SinaraSpark:
+# importing
+from sinara.spark.spark import _SinaraSpark
+
+class SinaraSpark(_SinaraSpark):
     
     _clustersize = 0
     _config = None
@@ -22,7 +28,7 @@ class SinaraSpark:
 
     
     @staticmethod
-    def run_session(clusterSize=0 , app="my app", conf=None, reuse_session=True):
+    def run_session(clusterSize=0 , app="my app", conf=None, reuse_session=True, debug=True):
         SinaraSpark.stop_session()
         print("Session is run")
         
@@ -79,5 +85,3 @@ class SinaraSpark:
 
         SinaraSpark._config = conf
         return conf
-
-_=atexit.register(SinaraSpark.stop_session)

@@ -20,7 +20,6 @@ import re
 
 from subprocess import STDOUT, PIPE, Popen, run, CalledProcessError
 
-from sinara.fs import SinaraFileSystem
 import nbformat
 import jupyter_client
 

@@ -1,3 +1,3 @@
-from .localfs import SinaraLocalFileSystem
+from ..common import importSinaraModuleClass
 
-SinaraFileSystem = SinaraLocalFileSystem
+SinaraFileSystem = importSinaraModuleClass(module_name = "fs", class_name = "SinaraFileSystem")

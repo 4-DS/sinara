@@ -1,15 +1,21 @@
 import os
 import shutil
 from pathlib import Path
+import sys
 
 class SinaraLocalFileSystem(object):
 
     @staticmethod
     def FileSystem():
         return _SinaraLocalFileSystem
-    
 
-class _SinaraLocalFileSystem(object):
+# setting Sinara abstract class
+sys.path.append('../../sinara')
+
+# importing
+from sinara.fs.fs import _SinaraFileSystem
+
+class _SinaraLocalFileSystem(_SinaraFileSystem):
     
     @staticmethod
     def glob(path):
