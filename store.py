@@ -18,15 +18,15 @@ class SinaraStore:
     """
         
     @staticmethod
-    def copy_tmp_coco_to_store(tmp_coco_path=str, store_path=str):
-        copy_tmp_files_to_store()
+    def copy_tmp_files_to_store(tmp_dir=str, store_dir=str, file_globs=["*"]):
+        archive_tmp_files_to_store(tmp_dir, store_dir, file_globs)
 
     @staticmethod
-    def copy_store_coco_to_tmp(store_coco_path=str, tmp_path=str):
-        copy_tmp_files_to_store()
+    def copy_store_files_to_tmp(store_dir=str, tmp_dir=str, file_globs=["*"]):
+        dearchive_store_files_to_tmp(store_dir, tmp_dir, file_globs)
         
     @staticmethod
-    def copy_tmp_files_to_store(tmp_dir=str, store_dir=str, file_globs=["*"]):
+    def archive_tmp_files_to_store(tmp_dir=str, store_path=str, file_globs=["*"]):
         """
             upload list of files from data temporary directory to store
             subfolders are not supported
@@ -57,7 +57,7 @@ class SinaraStore:
         
         
     @staticmethod
-    def copy_store_files_to_tmp(store_dir=str, tmp_dir=str, file_globs=["*"]):
+    def dearchive_store_files_to_tmp(store_path=str, tmp_dir=str, file_globs=["*"]):
         """
             download list of files from data temporary directory to store
             subfolders are not supported
