@@ -22,7 +22,7 @@ from subprocess import STDOUT, PIPE, Popen, run, CalledProcessError
 
 import nbformat
 import jupyter_client
-
+from .fs import SinaraFileSystem
 
 class Step:
 # Here we use 'reset_curr_run_id' to ensure an unique run_id every time we are running Sinara Step interactively 
@@ -762,3 +762,92 @@ class StepReport:
             raise Exception("there is not *.runinfo.json files inside tmp folder")
         run_info_file_name = sorted(run_info_file_names)[-1]
         return re.match(f".*(run-.*?)_", run_info_file_name).group(1)
+
+    @staticmethod
+    def save(run_id=None):
+        run_id = run_id or get_curr_run_id()
+        
+        for run_info_file_name in glob.glob(f"tmp/{run_id}*.runinfo.json"):
+            
+            nb_name = re.search(f"{run_id}_(.+?).runinfo.json", run_info_file_name).group(1)
+            local_runinfo_path = f"tmp/{run_id}_{nb_name}.runinfo.json"
+            
+            #local_metrics_path = f"tmp/{run_id}_{nb_name}.metrics.json"
+            
+            nb_module_detected = None
+            local_report_path = ''
+            _local_report_path = f"tmp/{run_id}_{nb_name}.ipynb" 
+            if Path(_local_report_path).is_file():
+                local_report_path = _local_report_path
+                nb_module_detected = True
+            else:
+                _local_report_path = f"tmp/{run_id}_{nb_name}.py.log"
+                if Path(_local_report_path).is_file():
+                    local_report_path = _local_report_path
+                    nb_module_detected = False
+            
+            fs = SinaraFileSystem.FileSystem()
+                
+            if nb_module_detected:
+                local_business_report_path = f"tmp/{run_id}_{nb_name}.business_report.ipynb"
+            
+                hmtl_local_report_path = f"tmp/{run_id}_{nb_name}.html"
+                hmtl_local_business_report_path = f"tmp/{run_id}_{nb_name}.business_report.html"
+            
+                with open(run_info_file_name) as json_file:
+
+                    artifacts_urls = json.load(json_file)["artifacts"]
+                    reports_urls = [x for x in artifacts_urls if re.search(f"(.+?).reports.{nb_name}.ipynb", x)]
+                    if len(reports_urls) != 1:
+                        raise Exception(f"Sinara step artifacts must contain exactly one artifact url for reports like '*.reports.{nb_name}.ipynb' ")
+                    target_reports_dir_path = artifacts_urls[reports_urls[0]]
+
+                target_runinfo_path = f"{target_reports_dir_path}/runinfo.json"
+                target_report_path = f"{target_reports_dir_path}/report.html"
+                target_report_path_ipynb =  f"{target_reports_dir_path}/report.ipynb"
+                target_business_report_path = f"{target_reports_dir_path}/business_report.html"
+                #target_metrics_path = f"{target_reports_dir_path}/metrics.json"
+
+                ipynb_to_html(local_report_path, hmtl_local_report_path)
+                ipynb_to_html(local_business_report_path, hmtl_local_business_report_path)
+
+                fs.makedirs(target_reports_dir_path)
+                fs.put(local_runinfo_path,target_runinfo_path)
+                fs.put(hmtl_local_report_path,target_report_path)
+                fs.put(hmtl_local_business_report_path,target_business_report_path)
+                fs.put(local_report_path,target_report_path_ipynb)
+                #fs.put(local_metrics_path,target_metrics_path)
+
+                os.remove(hmtl_local_report_path)
+                os.remove(hmtl_local_business_report_path)
+            else:
+                
+                local_report_path_py = f"tmp/{run_id}_{nb_name}.py"
+                
+                with open(run_info_file_name) as json_file:
+
+                    artifacts_urls = json.load(json_file)["artifacts"]
+                    reports_urls = [x for x in artifacts_urls if re.search(f"(.+?).reports.{nb_name}.py", x)]
+                    if len(reports_urls) != 1:
+                        raise Exception(f"Sinara step artifacts must contain exactly one artifact url for reports like '*.reports.{nb_name}.py' ")
+                    target_reports_dir_path = artifacts_urls[reports_urls[0]]
+
+                # Set SUCCESS if there had not been no exceptions before
+                
+                with open(local_runinfo_path, 'r+') as f:
+                    local_runinfo_json = json.load(f)
+                    local_runinfo_json["result"] = 'SUCCESS'                    
+                    f.seek(0)        # <--- should reset file position to the beginning.
+                    json.dump(local_runinfo_json, f, indent=4)
+                    f.truncate()     # remove remaining part
+
+                target_runinfo_path = f"{target_reports_dir_path}/runinfo.json"
+                target_report_path = f"{target_reports_dir_path}/report.txt"
+                target_report_path_py =  f"{target_reports_dir_path}/report.py"
+                #target_metrics_path = f"{target_reports_dir_path}/metrics.json"
+
+                fs.makedirs(target_reports_dir_path)
+                fs.put(local_runinfo_path,target_runinfo_path)
+                fs.put(local_report_path,target_report_path)
+                fs.put(local_report_path_py,target_report_path_py)
+                #fs.put(local_metrics_path,target_metrics_path)
