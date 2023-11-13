@@ -694,23 +694,23 @@ def interpreter_is_ipython():
 class StepSafeguard:
     
     @staticmethod
-    def component_is_in_dir(globs):
+    def step_is_in_dir(globs):
         if isinstance(globs, str):
             globs = [globs]
         for glob in globs:  
             if fnmatch.fnmatch(sys.path[0].lower(), glob):
                 return True
-        raise Exception(f"This job can be run for components only located in a directory matches '{globs}' pattern")
+        raise Exception(f"This can be run for steps only located in a directory matches '{globs}' pattern")
     
     
     @staticmethod
-    def component_is_in_branch(globs):
+    def step_is_in_branch(globs):
         if isinstance(globs, str):
             globs = [globs]
         for glob in globs:  
             if fnmatch.fnmatch(git.Repo().active_branch.name.lower(), glob):
                 return True
-        raise Exception(f"This job can be run for components only located in a git branch matches '{globs}' pattern")
+        raise Exception(f"This can be run for steps only located in a git branch matches '{globs}' pattern")
             
     @staticmethod
     def git_reset(branch=None):
@@ -751,7 +751,7 @@ class StepReport:
         with open(run_info_file_name) as json_file:       
             artifacts_urls = json.load(json_file)["artifacts"]
             if len(artifacts_urls) == 0:
-                raise Exception(f"DSML component artifacts inside '{run_info_file_name}' file must contain at least one artifact ")
+                raise Exception(f"Sinara step artifacts inside '{run_info_file_name}' file must contain at least one artifact ")
             artifacts_url = list(artifacts_urls.values())[0]
             return re.match(f"(.*?{run_id})",artifacts_url).group()
         
