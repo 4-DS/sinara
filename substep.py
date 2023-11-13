@@ -225,7 +225,7 @@ class NotebookSubstep:
         
         # TODO
         # step_name could be defined at step_params level?
-        self._step_name = pipeline_params.get("step_name") or default_step_name #or Path(os.getcwd()).name
+        self._step_name = step_params.get("step_name") or default_step_name #or Path(os.getcwd()).name
         
         self._registered_inputs = []
         self._registered_outputs = []
