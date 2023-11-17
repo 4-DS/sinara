@@ -335,16 +335,6 @@ class NotebookSubstep:
         """Returns local path where managed cached entities are stored for current component"""
         env_path = SinaraSettings.get_tmp_path(self._env_name)
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
-
-    def save_metrics(self):
-        metrics_url, metrics_entity_name = self.make_data_url(self._step_name, self._env_name, self._pipeline_name, self._zone_name, f"metrics.{get_curr_notebook_name()}", self._run_id, 'outputs')
-        metrics_full_url = os.path.join(metrics_url, f'{metrics_entity_name}.json')
-        if len(self.metrics) > 1:
-            os.makedirs(metrics_url, exist_ok=True)
-            with open(metrics_full_url, 'w') as outfile:
-                json.dump(self.metrics, outfile)
-            from .store import SinaraStore
-            SinaraStore.write_entity(metrics_full_url, metrics_full_url)
             
     def add_metric(self, metric_name, metric_value):
         self._metrics[metric_name] = metric_value
@@ -410,8 +400,10 @@ class NotebookSubstep:
 
         with open(run_info_file_name, 'w') as outfile:
             json.dump(run_info, outfile)
-            
-        self.save_metrics()
+        
+        metric_file_name = f"tmp/{otput_nb_stem}.metrics.json"
+        with open(metric_file_name, 'w') as outfile:
+            json.dump(self.metrics, outfile)
 
     def _get_runinfo(self):
         """Returns current run_info"""

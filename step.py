@@ -772,7 +772,7 @@ class StepReport:
             nb_name = re.search(f"{run_id}_(.+?).runinfo.json", run_info_file_name).group(1)
             local_runinfo_path = f"tmp/{run_id}_{nb_name}.runinfo.json"
             
-            #local_metrics_path = f"tmp/{run_id}_{nb_name}.metrics.json"
+            local_metrics_path = f"tmp/{run_id}_{nb_name}.metrics.json"
             
             nb_module_detected = None
             local_report_path = ''
@@ -806,7 +806,7 @@ class StepReport:
                 target_report_path = f"{target_reports_dir_path}/report.html"
                 target_report_path_ipynb =  f"{target_reports_dir_path}/report.ipynb"
                 target_business_report_path = f"{target_reports_dir_path}/business_report.html"
-                #target_metrics_path = f"{target_reports_dir_path}/metrics.json"
+                target_metrics_path = f"{target_reports_dir_path}/metrics.json"
 
                 ipynb_to_html(local_report_path, hmtl_local_report_path)
                 ipynb_to_html(local_business_report_path, hmtl_local_business_report_path)
@@ -816,7 +816,7 @@ class StepReport:
                 fs.put(hmtl_local_report_path,target_report_path)
                 fs.put(hmtl_local_business_report_path,target_business_report_path)
                 fs.put(local_report_path,target_report_path_ipynb)
-                #fs.put(local_metrics_path,target_metrics_path)
+                fs.put(local_metrics_path,target_metrics_path)
 
                 os.remove(hmtl_local_report_path)
                 os.remove(hmtl_local_business_report_path)
@@ -844,10 +844,10 @@ class StepReport:
                 target_runinfo_path = f"{target_reports_dir_path}/runinfo.json"
                 target_report_path = f"{target_reports_dir_path}/report.txt"
                 target_report_path_py =  f"{target_reports_dir_path}/report.py"
-                #target_metrics_path = f"{target_reports_dir_path}/metrics.json"
+                target_metrics_path = f"{target_reports_dir_path}/metrics.json"
 
                 fs.makedirs(target_reports_dir_path)
                 fs.put(local_runinfo_path,target_runinfo_path)
                 fs.put(local_report_path,target_report_path)
                 fs.put(local_report_path_py,target_report_path_py)
-                #fs.put(local_metrics_path,target_metrics_path)
+                fs.put(local_metrics_path,target_metrics_path)
