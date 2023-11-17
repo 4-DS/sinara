@@ -16,14 +16,7 @@ class SinaraStore:
      - functions to download a file from store to temporary data dir
      - functions to upload a file from temporary data dir to store
     """
-        
-    @staticmethod
-    def copy_tmp_files_to_store(tmp_dir=str, store_dir=str, file_globs=["*"]):
-        SinaraStore.archive_tmp_files_to_store(tmp_dir, store_dir, file_globs)
 
-    @staticmethod
-    def copy_store_files_to_tmp(store_dir=str, tmp_dir=str, file_globs=["*"]):
-        SinaraStore.dearchive_store_files_to_tmp(store_dir, tmp_dir, file_globs)
         
     @staticmethod
     def archive_tmp_files_to_store(tmp_dir=str, store_path=str, file_globs=["*"]):
