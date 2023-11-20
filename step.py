@@ -851,3 +851,313 @@ class StepReport:
                 fs.put(local_report_path,target_report_path)
                 fs.put(local_report_path_py,target_report_path_py)
                 fs.put(local_metrics_path,target_metrics_path)
+
+class SinaraDiffReport:
+    
+    _curr_branch = None
+    _target_branch = None
+    
+    _curr_run = None 
+    _target_run = None
+    
+    _curr_run_path = None 
+    _target_run_path = None
+    
+    _curr_commit = None 
+    _target_commit = None
+    
+    _dsml_module_names_added = None
+    _dsml_module_names_removed = None
+    _dsml_module_names_changed = None
+    
+    _hdfs_module_added_paths = None
+    _hdfs_module_target_paths = None
+    _hdfs_module_curr_paths = None
+    _hdfs_module_removed_paths = None
+    
+    _hdfs_module_added_paths_html = None
+    _hdfs_module_target_paths_html = None
+    _hdfs_module_curr_paths_html = None
+    _hdfs_module_removed_paths_html = None
+    
+    _local_module_target_paths = None
+    _local_module_curr_paths = None
+    _local_module_removed_paths = None
+    _local_module_added_paths = None
+    _local_module_diff_paths = None
+    _local_diff_info_path = None
+    _local_success_file_path = None
+    _local_diff_report_dir = None
+    
+    _local_module_target_paths_html = None
+    _local_module_curr_paths_html = None
+    _local_module_removed_paths_html = None
+    _local_module_added_paths_html = None
+    
+    _hdfs_diff_report_dir = None
+    
+    _diff_module_target_paths = None
+    _diff_module_curr_paths = None
+    _diff_module_diff_paths = None
+    _diff_module_removed_paths = None
+    _diff_module_added_paths = None
+
+    _diff_diff_info_path = None
+    _diff_success_file_path = None
+    _diff_diff_report_dir = None
+    
+    
+    @staticmethod
+    def save(curr_branch, target_branch):
+        me = SinaraDiffReport
+        me._fetch_all_tags()
+        
+        print("Diff report creating:\n")
+        
+        me._curr_branch = curr_branch
+        curr_top_tag = me._get_top_tag(curr_branch); print(f"\tCURRENT BRANCH: {me._curr_branch}")
+        me._curr_commit = curr_top_tag[2] if curr_top_tag else None; print(f"\tCURRENT COMMIT: {me._curr_commit}")
+        me._curr_run = curr_top_tag[0] if curr_top_tag else None; print(f"\tCURRENT RUN: {me._curr_run}")
+        me._curr_run_path = curr_top_tag[1] if curr_top_tag else None; print(f"\tCURRENT RUN PATH: {me._curr_run_path}\n")
+        
+        me._target_branch = target_branch
+        target_top_tag = me._get_top_tag(target_branch); print(f"\tTARGET BRANCH: {me._target_branch}")
+        me._target_commit = target_top_tag[2] if target_top_tag else None; print(f"\tTARGET COMMIT: {me._target_commit}")
+        me._target_run = target_top_tag[0] if target_top_tag else None; print(f"\tTARGET RUN: {me._target_run}")
+        me._target_run_path = target_top_tag[1] if target_top_tag else None; print(f"\tTARGET RUN PATH: {me._target_run_path}\n")
+        
+        if not me._curr_run or not me._target_run:
+            print(f"WARNING: diff report wasn't created due to the absence of commits tagged by runs either on current branch or on target branch")
+            print(f"WARNING: current branch: '{curr_branch}' ")
+            print(f"WARNING: target branch: '{target_branch}' ")
+            return
+        
+        SinaraDiffReport._get_module_names()
+        SinaraDiffReport._get_fs_paths()
+        SinaraDiffReport._make_local_paths()
+        SinaraDiffReport._make_diff_paths()
+        
+        print(f"\tPreparing tmp diff report inside of '{me._local_diff_report_dir}':")
+        
+        if not SinaraDiffReport._copy_modules_to_local():
+            return
+        SinaraDiffReport._make_module_diffs()
+        SinaraDiffReport._make_diff_info()
+        SinaraDiffReport._make_success_file()
+        
+        print(f"\tCopying tmp diff report to 'hdfs://{me._diff_diff_report_dir}'")
+        SinaraDiffReport._copy_diff_report_to_fs()
+        print(f"\tTagging current commit by DIFF TAG...")
+        diff_id = SinaraDiffReport._tag_commit_by_diff()
+        print(f"\tDIFF TAG: {diff_id}")
+        print("\tDiff report created")
+    
+    @staticmethod
+    def _get_module_names():
+        me = SinaraDiffReport
+        fs = SinaraFileSystem.FileSystem()
+        
+        curr_report_paths = fs.glob(f"{me._curr_run_path}/reports.*.ipynb") if me._curr_run_path else []
+        curr_report_names = {PurePosixPath(report_path).name for report_path in curr_report_paths }
+        
+        target_report_paths = fs.glob(f"{me._target_run_path}/reports.*.ipynb") if me._target_run_path else []
+        target_report_names = {PurePosixPath(report_path).name for report_path in target_report_paths }
+
+        me._dsml_module_names_added = curr_report_names - target_report_names
+        me._dsml_module_names_removed = target_report_names - curr_report_names
+        me._dsml_module_names_changed = target_report_names & curr_report_names
+    
+    @staticmethod
+    def _get_fs_paths():
+        me = SinaraDiffReport
+        
+        me._hdfs_module_added_paths = [ f"{me._curr_run_path}/{report_added}/report.ipynb" for report_added in me._dsml_module_names_added ]
+        me._hdfs_module_target_paths = [ f"{me._target_run_path}/{report_changed}/report.ipynb" for report_changed in me._dsml_module_names_changed ]
+        me._hdfs_module_curr_paths = [ f"{me._curr_run_path}/{report_changed}/report.ipynb" for report_changed in me._dsml_module_names_changed ]
+        me._hdfs_module_removed_paths = [ f"{me._target_run_path}/{report_changed}/report.ipynb" for report_changed in me._dsml_module_names_removed ]
+        
+        me._hdfs_module_added_paths_html = [ f"{me._curr_run_path}/{report_added}/report.html" for report_added in me._dsml_module_names_added ]
+        me._hdfs_module_target_paths_html = [ f"{me._target_run_path}/{report_changed}/report.html" for report_changed in me._dsml_module_names_changed ]
+        me._hdfs_module_curr_paths_html = [ f"{me._curr_run_path}/{report_changed}/report.html" for report_changed in me._dsml_module_names_changed ]
+        me._hdfs_module_removed_paths_html = [ f"{me._target_run_path}/{report_changed}/report.html" for report_changed in me._dsml_module_names_removed ]
+        
+    @staticmethod
+    def _make_diff_paths():
+        me = SinaraDiffReport
+        diff_dir = f"{me._curr_run_path}/diff.{me._curr_run}.{me._target_run}"
+        
+        me._diff_module_target_paths = [f"{diff_dir}/{module_name.split('.')[1]}.target.html" for module_name in me._dsml_module_names_changed]
+        me._diff_module_curr_paths = [f"{diff_dir}/{module_name.split('.')[1]}.curr.html" for module_name in me._dsml_module_names_changed]
+        me._diff_module_diff_paths = [f"{diff_dir}/{module_name.split('.')[1]}.diff.txt" for module_name in me._dsml_module_names_changed]
+        me._diff_module_removed_paths = [f"{diff_dir}/{module_name.split('.')[1]}.removed.html" for module_name in me._dsml_module_names_removed]
+        me._diff_module_added_paths = [f"{diff_dir}/{module_name.split('.')[1]}.added.html" for module_name in me._dsml_module_names_added]
+        
+        me._diff_diff_info_path = f"{diff_dir}/diff_info.json"
+        me._diff_success_file_path = f"{diff_dir}/_SUCCESS"
+        me._diff_diff_report_dir = diff_dir
+        
+    @staticmethod
+    def _make_local_paths():
+        me = SinaraDiffReport
+        diff_dir = f"{get_sinara_step_tmp_path()}/diff.{me._curr_run}.{me._target_run}"
+        
+        me._local_module_target_paths = [f"{diff_dir}/{module_name.split('.')[1]}.target.ipynb" for module_name in me._dsml_module_names_changed]
+        me._local_module_curr_paths = [f"{diff_dir}/{module_name.split('.')[1]}.curr.ipynb" for module_name in me._dsml_module_names_changed]
+        me._local_module_diff_paths = [f"{diff_dir}/{module_name.split('.')[1]}.diff.txt" for module_name in me._dsml_module_names_changed]
+        me._local_module_removed_paths = [f"{diff_dir}/{module_name.split('.')[1]}.removed.ipynb" for module_name in me._dsml_module_names_removed]
+        me._local_module_added_paths = [f"{diff_dir}/{module_name.split('.')[1]}.added.ipynb" for module_name in me._dsml_module_names_added]
+        
+        me._local_module_target_paths_html = [f"{diff_dir}/{module_name.split('.')[1]}.target.html" for module_name in me._dsml_module_names_changed]
+        me._local_module_curr_paths_html = [f"{diff_dir}/{module_name.split('.')[1]}.curr.html" for module_name in me._dsml_module_names_changed]
+        me._local_module_removed_paths_html = [f"{diff_dir}/{module_name.split('.')[1]}.removed.html" for module_name in me._dsml_module_names_removed]
+        me._local_module_added_paths_html = [f"{diff_dir}/{module_name.split('.')[1]}.added.html" for module_name in me._dsml_module_names_added]
+        
+        me._local_diff_info_path = f"{diff_dir}/diff_info.json"
+        me._local_success_file_path = f"{diff_dir}/_SUCCESS"
+        me._local_diff_report_dir = diff_dir
+        
+    @staticmethod
+    def _copy_modules_to_local():
+        
+        me = SinaraDiffReport
+        if os.path.exists(me._local_success_file_path):
+            print("local diff report wasn't created due to it already exists")
+            return False
+        
+        shutil.rmtree(me._local_diff_report_dir, ignore_errors=True)
+        os.makedirs(me._local_diff_report_dir, exist_ok=False)
+        
+        fs = SinaraFileSystem.FileSystem()
+        list(map(fs.get, me._hdfs_module_added_paths, me._local_module_added_paths))
+        list(map(fs.get, me._hdfs_module_removed_paths, me._local_module_removed_paths))
+        list(map(fs.get, me._hdfs_module_curr_paths, me._local_module_curr_paths))
+        list(map(fs.get, me._hdfs_module_target_paths, me._local_module_target_paths))
+        list(map(fs.get, me._hdfs_module_added_paths_html, me._local_module_added_paths_html))
+        list(map(fs.get, me._hdfs_module_removed_paths_html, me._local_module_removed_paths_html))
+        list(map(fs.get, me._hdfs_module_curr_paths_html, me._local_module_curr_paths_html))
+        list(map(fs.get, me._hdfs_module_target_paths_html, me._local_module_target_paths_html))
+        return True
+    
+    @staticmethod 
+    def _make_module_diffs():
+        me = SinaraDiffReport
+        list(map(me._make_ipynb_diff_file, me._local_module_target_paths, me._local_module_curr_paths, me._local_module_diff_paths))
+          
+    @staticmethod 
+    def _make_ipynb_diff_file( base, remote, output ):
+        from nbdime.utils import read_notebook
+        from nbdime.diffing.notebooks import diff_notebooks
+        from nbdime.args import prettyprint_config_from_args, process_diff_flags
+        from nbdime.prettyprint import pretty_print_notebook_diff
+        from nbdime import nbdiffapp
+
+        #https://nbdime.readthedocs.io/en/latest/cli.html?highlight=ignore-metadata#common-diff-options
+        args= [base, remote, "--ignore-metadata", "--ignore-id", "--ignore-attachments", "--ignore-outputs", "--ignore-details"]
+
+        arguments = nbdiffapp._build_arg_parser().parse_args(args)
+        arguments.use_color = False
+        process_diff_flags(arguments)
+
+        a = read_notebook(base, on_null='empty')
+        a.cells.pop(-1)
+        b = read_notebook(remote, on_null='empty')
+        b.cells.pop(-1)
+        d = diff_notebooks(a, b)
+
+        class Printer:
+            def __init__( self, file):
+                self._output_file = file
+            def write(self, text):
+                self._output_file.write(text)
+                
+        if os.path.exists(output):
+            os.remove(output)
+        with open(output, 'a') as f:
+            config = prettyprint_config_from_args(arguments, out=Printer(f))
+            pretty_print_notebook_diff(base, remote, a, d, config)
+            f.flush()
+    
+    @staticmethod
+    def _make_diff_info():
+        me = SinaraDiffReport
+        
+        diff_info = {
+            "curr_run_path": me._curr_run_path,
+            "target_run_path": me._target_run_path
+        }
+        with open(me._local_diff_info_path, 'w') as outfile:
+            json.dump(diff_info, outfile)
+    
+    @staticmethod
+    def _make_success_file():
+        me = SinaraDiffReport
+        Path(me._local_success_file_path).touch()
+   
+    @staticmethod
+    def _copy_diff_report_to_fs():
+        me = SinaraDiffReport
+        fs = SinaraFileSystem.FileSystem()
+        
+        fs.makedirs(me._diff_diff_report_dir)
+        
+        list(map(fs.put, me._local_module_added_paths_html, me._diff_module_added_paths))
+        list(map(fs.put, me._local_module_removed_paths_html, me._diff_module_removed_paths))
+        list(map(fs.put, me._local_module_curr_paths_html, me._diff_module_curr_paths))
+        list(map(fs.put, me._local_module_target_paths_html, me._diff_module_target_paths))
+        list(map(fs.put, me._local_module_diff_paths, me._diff_module_diff_paths))
+        
+        fs.put(me._local_diff_info_path,  me._diff_diff_info_path )
+        fs.put(me._local_success_file_path, me._diff_success_file_path )
+    
+    @staticmethod
+    def _tag_commit_by_diff():
+        me = SinaraDiffReport
+        diff_id = f"diff.{me._curr_run}.{me._target_run}"
+        diff_fs_path = me._diff_diff_report_dir
+        StepReport._fetch_all_tags()
+        tag_ref = git.Repo().create_tag(diff_id, message=diff_fs_path)
+        git.Repo().remote().push(tag_ref)
+        return diff_id
+    
+    @staticmethod 
+    def _get_top_tag(branch_name, traverse_last_commits_count=100):
+        #it is straighforward initial method implementation. 
+        #Performance can degrade with an increase in the number of tags in the repository
+        #Algorithm complexity is O(n) where n is number of tags in the git repo
+        all_tags = git.Repo().tags
+        ordered_branch_commits = list(git.Repo().iter_commits(branch_name, max_count=traverse_last_commits_count))
+        tagged_commits = { tag.commit for tag in all_tags if tag.name.startswith("run-")}
+        ordered_tagged_branch_commits = [ commit for commit in ordered_branch_commits if commit in tagged_commits ]
+        if len(ordered_tagged_branch_commits) == 0:
+            return []
+        
+        last_tagged_branch_commit = ordered_tagged_branch_commits[0]
+
+        tags_on_last_commit = [(tag.name,tag.tag.message,tag.commit) for tag in all_tags if tag.commit == last_tagged_branch_commit ]
+        return sorted(tags_on_last_commit, key=lambda x: x[0])[-1]
+    
+    @staticmethod
+    def _fetch_all_tags():
+        #TODO: git fetch --all --tags
+        #https://linuxtut.com/en/76a3fb171e9143ff695e/
+        me = SinaraDiffReport
+
+        repo = git.Repo()
+        original_branch = repo.active_branch
+        
+        origin = repo.remote()
+        tags = origin.fetch(**{"tags":True})
+        git.Repo().git.clear_cache()
+        try:
+            for branch in repo.branches:
+                if branch == repo.active_branch:
+                    continue
+                branch.checkout()
+                git.Repo().git.clear_cache()
+                repo.git.pull()
+                git.Repo().git.clear_cache()
+                origin = repo.remote()
+                tags = origin.fetch(**{"tags":True})
+        finally:
+            git.Repo().git.clear_cache()
+            original_branch.checkout()
