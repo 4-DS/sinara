@@ -211,7 +211,7 @@ class SinaraStepNotebook(SinaraStepModule):
 
     def parse(self):
         from nbconvert import NotebookExporter
-        self.nb_body, self.resources = NotebookExporter().from_filename(self.input_nb_name)
+        self.nb_body, self.inputs = NotebookExporter().from_filename(self.input_nb_name)
         self.input_nb_dict = json.loads(self.nb_body)
         self.tagged_known_cells = {}
         self.output_nb_dict = self.input_nb_dict.copy()
@@ -514,7 +514,7 @@ class SinaraStepPythonModule(SinaraStepModule):
         print( '''\
         1. Module must contain the initialized variables:
             - params(dict) and run_params(dict)
-        2. params, run_params, resources, artifacts and result values must not be changed after the initilization
+        2. params, run_params, inputs, outputs and result values must not be changed after the initilization
         ''')
 
     def _get_output_notebook_name(self):
@@ -598,10 +598,10 @@ def write_business_report(nb_commit_report,
     from nbconvert import NotebookExporter
     import json
 
-    (body, resources) = NotebookExporter().from_filename(nb_commit_report)
+    (body, inputs) = NotebookExporter().from_filename(nb_commit_report)
 
     body_dict = json.loads(body)
-
+    
     # remove non business_report cell
     for cell in list(body_dict["cells"]):
         if cell["cell_type"] != "code":
@@ -629,22 +629,22 @@ def create_business_report_summary(runinfo_dict):
         "id": str(uuid.uuid4()),
         "metadata": {},
         "source": [
-            "#### Компонент {product_name}/{Step_name}/{commit} удачно собран и проверен\n",
+            "#### Step {product_name}/{Step_name}/{commit} has been built and checked \n",
             "\n",
-            "**Ресурсы**:\n",
-            "- {resource_id} : {resource_url}\n",
+            "**Inputs**:\n",
+            "- {input_id} : {input_url}\n",
             "    \n",
-            "**Артефакты**:\n",
-            "- {artifact_id} : {artifact_url}\n",
+            "**Outputs**:\n",
+            "- {output_id} : {output_url}\n",
             "    \n",
-            "**Детали**:\n",
-            "- Время старта (UTC): {start_time}\n",
-            "- Время выполнения (UTC): {duration}"
+            "**Details**:\n",
+            "- Start time (UTC): {start_time}\n",
+            "- Duration (UTC): {duration}"
         ]
     }
     HEADER_INDEX = 0
-    RESOURCE_INDEX = 3
-    ARTIFACT_INDEX = 6
+    INPUT_INDEX = 3
+    OUTPUT_INDEX = 6
     START_TIME_INDEX = 9
     DURATION_INDEX = 10
 
@@ -659,19 +659,19 @@ def create_business_report_summary(runinfo_dict):
     header = header_template.format(**header_params)
     business_report_cell["source"][HEADER_INDEX] = header
 
-    # specify resources
-    resource_template = business_report_cell["source"][RESOURCE_INDEX]
-    resources = ""
-    for res_key, res_value in runinfo_dict["resources"].items():
-        resources = resources + resource_template.format(resource_id=res_key, resource_url=res_value) + "\n"
-    business_report_cell["source"][RESOURCE_INDEX] = resources
+    # specify inputs
+    input_template = business_report_cell["source"][INPUT_INDEX]
+    inputs = ""
+    for res_key, res_value in runinfo_dict["inputs"].items():
+        inputs = inputs + input_template.format(input_id=res_key, input_url=res_value) + "\n"
+    business_report_cell["source"][INPUT_INDEX] = inputs
 
-    # specify artifacts
-    artifact_template = business_report_cell["source"][ARTIFACT_INDEX]
-    artifacts = ""
-    for artf_key, artf_value in runinfo_dict["artifacts"].items():
-        artifacts = artifacts + artifact_template.format(artifact_id=artf_key, artifact_url=artf_value) + "\n"
-    business_report_cell["source"][ARTIFACT_INDEX] = artifacts
+    # specify inputs
+    output_template = business_report_cell["source"][OUTPUT_INDEX]
+    outputs = ""
+    for artf_key, artf_value in runinfo_dict["outputs"].items():
+        outputs = outputs + output_template.format(output_id=artf_key, output_url=artf_value) + "\n"
+    business_report_cell["source"][OUTPUT_INDEX] = outputs
 
     # specify start_time
     start_time_template = business_report_cell["source"][START_TIME_INDEX]
@@ -682,7 +682,7 @@ def create_business_report_summary(runinfo_dict):
     duration_template = business_report_cell["source"][DURATION_INDEX]
     duration = duration_template.format(duration=runinfo_dict["duration"])
     business_report_cell["source"][DURATION_INDEX] = duration
-
+    
     return business_report_cell        
 
 def interpreter_is_ipython():
@@ -749,11 +749,11 @@ class StepReport:
         run_info_file_name = run_info_file_names[0]
         
         with open(run_info_file_name) as json_file:       
-            artifacts_urls = json.load(json_file)["artifacts"]
-            if len(artifacts_urls) == 0:
-                raise Exception(f"Sinara step artifacts inside '{run_info_file_name}' file must contain at least one artifact ")
-            artifacts_url = list(artifacts_urls.values())[0]
-            return re.match(f"(.*?{run_id})",artifacts_url).group()
+            outputs_urls = json.load(json_file)["outputs"]
+            if len(outputs_urls) == 0:
+                raise Exception(f"Sinara step outputs inside '{run_info_file_name}' file must contain at least one output ")
+            outputs_url = list(outputs_urls.values())[0]
+            return re.match(f"(.*?{run_id})",outputs_url).group()
         
     @staticmethod
     def _get_last_run_id():
@@ -796,11 +796,11 @@ class StepReport:
             
                 with open(run_info_file_name) as json_file:
 
-                    artifacts_urls = json.load(json_file)["artifacts"]
-                    reports_urls = [x for x in artifacts_urls if re.search(f"(.+?).reports.{nb_name}.ipynb", x)]
+                    outputs_urls = json.load(json_file)["outputs"]
+                    reports_urls = [x for x in outputs_urls if re.search(f"(.+?).reports.{nb_name}.ipynb", x)]
                     if len(reports_urls) != 1:
-                        raise Exception(f"Sinara step artifacts must contain exactly one artifact url for reports like '*.reports.{nb_name}.ipynb' ")
-                    target_reports_dir_path = artifacts_urls[reports_urls[0]]
+                        raise Exception(f"Sinara step outputs must contain exactly one output url for reports like '*.reports.{nb_name}.ipynb' ")
+                    target_reports_dir_path = outputs_urls[reports_urls[0]]
 
                 target_runinfo_path = f"{target_reports_dir_path}/runinfo.json"
                 target_report_path = f"{target_reports_dir_path}/report.html"
@@ -826,11 +826,11 @@ class StepReport:
                 
                 with open(run_info_file_name) as json_file:
 
-                    artifacts_urls = json.load(json_file)["artifacts"]
-                    reports_urls = [x for x in artifacts_urls if re.search(f"(.+?).reports.{nb_name}.py", x)]
+                    outputs_urls = json.load(json_file)["outputs"]
+                    reports_urls = [x for x in outputs_urls if re.search(f"(.+?).reports.{nb_name}.py", x)]
                     if len(reports_urls) != 1:
-                        raise Exception(f"Sinara step artifacts must contain exactly one artifact url for reports like '*.reports.{nb_name}.py' ")
-                    target_reports_dir_path = artifacts_urls[reports_urls[0]]
+                        raise Exception(f"Sinara step outputs must contain exactly one output url for reports like '*.reports.{nb_name}.py' ")
+                    target_reports_dir_path = outputs_urls[reports_urls[0]]
 
                 # Set SUCCESS if there had not been no exceptions before
                 
