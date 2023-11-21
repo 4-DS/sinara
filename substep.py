@@ -310,14 +310,14 @@ class NotebookSubstep:
                   #traceback.print_exc()
             #      sys.exit(0)
     
-    def _artifacts_url(self):
-        """Returns hdfs path where all artifact entities are stored"""
+    def _outputs_url(self):
+        """Returns hdfs path where all output entities are stored"""
         env_path = SinaraSettings.get_env_path(self._env_name)
-        artifacts_url = f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}/{self._run_id}"
-        return artifacts_url
+        outputs_url = f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}/{self._run_id}"
+        return outputs_url
 
-    def _artifact_full_name(self, entity_name):
-        """Returns artifact fullname by name"""
+    def _output_full_name(self, entity_name):
+        """Returns output fullname by name"""
         return f"{self._env_name}.{self._pipeline_name}.{self._zone_name}.{self._step_name}.{entity_name}"
     
 
@@ -351,11 +351,11 @@ class NotebookSubstep:
             step_params,
             substeps_params,
             intermediate_runinfo = False):
-        """Serializes run_info by DSMLComponentJob
+        """Serializes run_info by Step
            'intermediate_runinfo' parameter is for an intermediate run_info serialization
            Run result for intermediate_runinfo can be not set as 'SUCCESS'
         """
-        #self._register_artifact_url(f"reports.{get_curr_notebook_name()}")
+        #self._register_output_url(f"reports.{get_curr_notebook_name()}")
 
         start_time = datetime.fromisoformat(start_time)
         stop_time = datetime.now()
@@ -382,7 +382,7 @@ class NotebookSubstep:
         # TODO
         #run_info["commit"] = self._commit
         
-        run_info["artifacts_url"] = self._artifacts_url()
+        run_info["outputs_url"] = self._outputs_url()
         run_info["notebook_report_url"] = self.make_data_url(self._step_name, self._env_name, self._pipeline_name, self._zone_name, f"reports.{get_curr_notebook_name()}", self._run_id, 'outputs')
         
         # Image and Nexus Build Snapshot coordinates
@@ -416,8 +416,8 @@ class NotebookSubstep:
         run_info["pipeline_params"] = self._pipeline_params
         run_info["step_params"] = self._step_params
         run_info["substeps_params"] = self._substeps_params
-        run_info["resources"] = self.registered_inputs
-        run_info["artifacts"] = self.registered_outputs
+        run_info["inputs"] = self.registered_inputs
+        run_info["outputs"] = self.registered_outputs
         run_info["tmp"] = {**self.registered_tmp_inputs, **self.registered_tmp_outputs, **self.registered_tmp_entities}
         run_info["status"] = 'RUNNING'
         run_info["duration"] = f"{stop_time - start_time}"
@@ -651,7 +651,7 @@ class NotebookSubstep:
         # Here we create run-id directory only because,
         # user are supposed to create either file or folder as an entity.
         self._validate_entity_name(entity_name)
-        entity_full_name = f"cache:{self._artifact_full_name(entity_name)}"
+        entity_full_name = f"cache:{self._output_full_name(entity_name)}"
         entity_url = f"{self._cache_url()}/{entity_name}"
         try:
             os.makedirs(entity_url)
@@ -680,7 +680,7 @@ class NotebookSubstep:
     def make_tmp_input_url(self, entity_name):
         """Registers existed cache entity and returns URL for it """
         entity_url = self._get_tmp_input_url(entity_name)
-        entity_full_name = f"cache:{self._artifact_full_name(entity_name)}"
+        entity_full_name = f"cache:{self._output_full_name(entity_name)}"
         self.registered_tmp_inputs[entity_full_name] = entity_url
         return entity_url
     
