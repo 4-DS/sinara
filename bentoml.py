@@ -66,7 +66,7 @@ def save_bentoservice( bentoservice, *, path, service_version ):
     with open(save_info_file, 'w+') as f:
         f.writelines(line + '\n' for line in save_info)
         
-    if bentoservice.name == 'ArtifactsArchive':
+    if bentoservice.name == 'BentoArchive':
         process_artifacts_archive(bentoservice, bentoservice_dir)
         
     if not hasattr(bentoservice, 'service_version'):

@@ -9,7 +9,7 @@ from .binary_artifact import BinaryFileArtifact
 @artifacts([
 ###artifacts_placeholder###
 ])
-class ArtifactsArchive(BentoService):
+class BentoArchive(BentoService):
     """
     ArchiveBentoService used to create archive file with artifacts
     """
