@@ -1,4 +1,5 @@
 from .fs import SinaraFileSystem
+from .utils import process_artifacts_archive, process_service_version
 import os
 import shutil
 from pathlib import Path
@@ -57,16 +58,6 @@ def save_bentoservice( bentoservice, *, path, service_version ):
     
     bentoservice.set_version(service_version)
     bentoservice.save_to_dir(bentoservice_dir)
-    
-    SERVICE_VERSION_TEXT = '''
-    @bentoml.api()
-    def service_version(self):
-        return self.version
-    '''
-    if not hasattr(bentoservice, 'service_version'):
-        bentoservice_file = os.path.join(bentoservice_dir, bentoservice.__class__.__name__, 'bentoservice.py')
-        with open(bentoservice_file, 'a') as f:
-            f.write(SERVICE_VERSION_TEXT)
         
     fix_bentoml_013_2(f'{bentoservice_dir}/bentoml-init.sh')
 
@@ -74,6 +65,12 @@ def save_bentoservice( bentoservice, *, path, service_version ):
 
     with open(save_info_file, 'w+') as f:
         f.writelines(line + '\n' for line in save_info)
+        
+    if bentoservice.name == 'ArtifactsArchive':
+        process_artifacts_archive(bentoservice, bentoservice_dir)
+        
+    if not hasattr(bentoservice, 'service_version'):
+        process_service_version(bentoservice, bentoservice_dir)
     
     #make zip file for bento service
     bentoservice_zipfile =  f"{tmppath}/{runid}_{bentoservice_name}.model" 
