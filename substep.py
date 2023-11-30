@@ -160,26 +160,51 @@ class DSMLUrls:
         full_entity_name = f'full_{entity_name}'
         return getattr(self, full_entity_name)
 
-def default_param_values(params_file_name):
+def get_pipeline_params(pprint):
+    params_file_name = "params/step_params.json"
+    
+    if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
+        params_file_name = os.environ["SINARA_STEP_PARAMS_FILE_PATH"]
+    
+    if "SINARA_PIPELINE_PARAMS_FILE_PATH" in os.environ:
+        params_file_name = os.environ["SINARA_PIPELINE_PARAMS_FILE_PATH"] or params_file_name
+  
     params = {}
     with open(params_file_name) as json_file:
        params = json.load(json_file)
     
-    default_pipeline_name = params["pipeline_params"].get("pipeline_name")
-    if not default_pipeline_name:
-        raise Exception(f"In the file {params_file_name} 'pipeline_name' param is not defined. It's mandatory. ")
-        
-    default_zone_name = params["pipeline_params"].get("zone_name")
+    pipeline_params = params["pipeline_params"]
+    
+    if not pipeline_params.get("pipeline_name"):
+            raise Exception(f"In the file {params_file_name} 'pipeline_name' param is not defined. It's mandatory. ")
+    
+    if pprint:
+        print_line_as_bold("Pipeline params:")
+        pp.pprint(pipeline_params)
+        print("\n")
 
-    default_step_name = params["step_params"].get("step_name")
-    if not default_step_name:
+    return pipeline_params
+    
+def get_step_params(pprint):
+    params_file_name = "params/step_params.json"
+    if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
+        params_file_name = os.environ["SINARA_STEP_PARAMS_FILE_PATH"]
+    
+    params = {}
+    with open(params_file_name) as json_file:
+       params = json.load(json_file)
+    
+    step_params = params["step_params"]
+
+    if not step_params.get("step_name"):
         raise Exception(f"In the file {params_file_name} 'step_name' param is not defined. It's mandatory. ")
     
-    return {
-            "default_pipeline_name": default_pipeline_name,
-            "default_zone_name": default_zone_name,
-            "default_step_name": default_step_name
-        }
+    if pprint:
+        print_line_as_bold("Step params:")
+        pp.pprint(step_params)
+        print("\n")
+        
+    return step_params
 
 class NotebookSubstep:
     """
@@ -196,20 +221,16 @@ class NotebookSubstep:
     def __init__(self,
                  pipeline_params,
                  step_params,
-                 substeps_params,
-                 default_env_name="user",
-                 default_pipeline_name="pipeline",
-                 default_zone_name="zone",
-                 default_step_name="step"):
+                 substeps_params):
         """NotebookSubstep constructor"""
         
         get_tmp_prepared()
         
-        #print(default_env_name)
-        #print(default_pipeline_name)
-        #print(default_zone_name)
-        #print(default_step_name)
-        
+        default_env_name = "user"
+        default_pipeline_name = "pipeline"
+        default_zone_name = "zone"
+        default_step_name = "step"
+                
         self._pipeline_params = pipeline_params
         self._step_params = step_params
         self._substeps_params = substeps_params
