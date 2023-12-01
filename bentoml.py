@@ -163,3 +163,43 @@ def save_bentoartifact_to_tmp(bentoservice,
         os.makedirs(artifact_file_path, exist_ok = True)
     
     bentoservice.artifacts[artifact_name].save(artifact_file_path)
+    
+def extract_artifacts_from_bentoservice(bentoservice_path, dest_folder=None):
+    
+    # read zip file from dir
+    runid = get_curr_run_id()
+    bentoservice_name = os.path.basename(bentoservice_path)
+    tmppath = get_sinara_step_tmp_path()
+    bentoservice_zipfile =  f"{tmppath}/{runid}_{bentoservice_name}.model.zip"
+    bentoservice_zipfile_crc = f"{tmppath}/.{runid}_{bentoservice_name}.model.zip.crc"
+    
+    fs = SinaraFileSystem.FileSystem()
+    if not fs.exists(f"{bentoservice_path}/_SUCCESS"):
+        raise Exception("There is no _SUCCESS file for '{path}'")
+    
+    fs.get(f"{bentoservice_path}/model.zip", bentoservice_zipfile)
+    
+    # unpack zip archive   
+    bentoservice_dir = f"{tmppath}/{runid}/{bentoservice_name}"
+    unpack_dest_folder = dest_folder if dest_folder else bentoservice_dir
+    unpack_dest_folder_tmp = Path(unpack_dest_folder) / '_tmp'
+    
+    shutil.unpack_archive(bentoservice_zipfile, unpack_dest_folder_tmp )
+    
+    bentoml_yaml = Path(unpack_dest_folder_tmp) / "bentoml.yml"
+    with open(bentoml_yaml, 'r') as f:
+        bentoml_info = yaml.safe_load(f)
+        
+    artifacts_folder = Path(unpack_dest_folder_tmp) / bentoml_info['metadata']['service_name'] / 'artifacts'
+
+    shutil.move(src=artifacts_folder, dst=unpack_dest_folder)
+    shutil.rmtree(unpack_dest_folder_tmp)
+
+    # remove zip file from tmp
+    os.remove(bentoservice_zipfile)
+    try:
+        os.remove(bentoservice_zipfile_crc)
+    except:
+        pass #crc file doesn't exisis
+    
+    return unpack_dest_folder
