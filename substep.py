@@ -17,11 +17,12 @@ from IPython.core.display import Markdown, display
 
 from .fs import SinaraFileSystem
 from .settings import SinaraSettings
+from ._version import __version__
 
 import logging
 
 def get_sinara_version():
-    return "0.0.1"
+    return __version__
 
 class StopExecution(Exception):
     pass
