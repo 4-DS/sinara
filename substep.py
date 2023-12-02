@@ -161,7 +161,7 @@ class DSMLUrls:
         full_entity_name = f'full_{entity_name}'
         return getattr(self, full_entity_name)
 
-def get_pipeline_params(pprint):
+def get_pipeline_params(*, pprint=False):
     params_file_name = "params/step_params.json"
     
     if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
@@ -186,7 +186,7 @@ def get_pipeline_params(pprint):
 
     return pipeline_params
     
-def get_step_params(pprint):
+def get_step_params(*, pprint=False):
     params_file_name = "params/step_params.json"
     if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
         params_file_name = os.environ["SINARA_STEP_PARAMS_FILE_PATH"]
@@ -648,7 +648,7 @@ class NotebookSubstep:
         
         elif data_type == 'tmp_inputs' or data_type == 'tmp_outputs':
             
-            self.registered_tmp_io[f'cache:{entity_full_name}'] = entity_url
+            self.registered_tmp_io[f'tmp:{entity_full_name}'] = entity_url
 
         return entity_url, entity_full_name
 
@@ -673,7 +673,7 @@ class NotebookSubstep:
         # Here we create run-id directory only because,
         # user are supposed to create either file or folder as an entity.
         self._validate_entity_name(entity_name)
-        entity_full_name = f"cache:{self._output_full_name(entity_name)}"
+        entity_full_name = f"tmp:{self._output_full_name(entity_name)}"
         entity_url = f"{self._cache_url()}/{entity_name}"
         try:
             os.makedirs(entity_url)
@@ -702,7 +702,7 @@ class NotebookSubstep:
     def make_tmp_input_url(self, entity_name):
         """Registers existed cache entity and returns URL for it """
         entity_url = self._get_tmp_input_url(entity_name)
-        entity_full_name = f"cache:{self._output_full_name(entity_name)}"
+        entity_full_name = f"tmp:{self._output_full_name(entity_name)}"
         self.registered_tmp_inputs[entity_full_name] = entity_url
         return entity_url
     
