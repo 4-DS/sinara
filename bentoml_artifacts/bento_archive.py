@@ -40,6 +40,7 @@ class BentoArchive(BentoService):
             file_extension = ''
             if 'file_extension' in kwargs:
                 file_extension = kwargs['file_extension']
+                file_extension =  file_extension if file_extension.startswith('.') else '.' + file_extension
                 del kwargs['file_extension']
             self.artifacts[name] = BinaryFileArtifact(name, file_extension = file_extension)
         
