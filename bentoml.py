@@ -1,4 +1,5 @@
 from .fs import SinaraFileSystem
+from .substep import get_curr_run_id, get_curr_notebook_name
 from .utils import process_artifacts_archive, process_service_version
 import os
 import shutil
@@ -13,17 +14,17 @@ import re
 from subprocess import STDOUT, PIPE, run, Popen
 import dataclasses
 
-def get_curr_run_id():
-    if "DSML_CURR_RUN_ID" not in os.environ:
-        run_id = reset_curr_run_id()
-    else:
-        run_id = os.environ["DSML_CURR_RUN_ID"]
-    return run_id
+# def get_curr_run_id():
+#     if "DSML_CURR_RUN_ID" not in os.environ:
+#         run_id = reset_curr_run_id()
+#     else:
+#         run_id = os.environ["DSML_CURR_RUN_ID"]
+#     return run_id
 
 def get_sinara_step_tmp_path():
     return f"{os.getcwd()}/tmp"
 
-def save_bentoservice( bentoservice, *, path, service_version ):
+def save_bentoservice( bentoservice, *, path, service_version = None ):
     
     # Correct 'ensure_python' method in bentoml-init.sh
     def fix_bentoml_013_2(filepath):
@@ -41,14 +42,14 @@ def save_bentoservice( bentoservice, *, path, service_version ):
     
     fspath = path
     
-    if service_version:
-        save_info = [f'BENTO_SERVICE={service_version}']
-    else:
-        raise Exception("Service version could not be empty!")
+    runid = get_curr_run_id()
+
+    if not service_version:
+        service_version = f'{get_curr_notebook_name()}.{runid}'
+    
+    save_info = [f'BENTO_SERVICE={service_version}']
     
     #write bento service to tmp dir
-    runid = get_curr_run_id()
-    
     bentoservice_name = os.path.basename(fspath)
     tmppath = get_sinara_step_tmp_path()
     bentoservice_dir = f"{tmppath}/{runid}/{bentoservice_name}"
@@ -56,7 +57,9 @@ def save_bentoservice( bentoservice, *, path, service_version ):
     shutil.rmtree(bentoservice_dir, ignore_errors=True)
     os.makedirs(bentoservice_dir, exist_ok=True)
     
-    bentoservice.set_version(service_version)
+    if not hasattr(bentoservice, 'service_version'):
+        bentoservice.set_version(service_version)
+
     bentoservice.save_to_dir(bentoservice_dir)
         
     fix_bentoml_013_2(f'{bentoservice_dir}/bentoml-init.sh')
