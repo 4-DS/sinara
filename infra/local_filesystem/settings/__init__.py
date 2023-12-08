@@ -1,1 +1,1 @@
-from .settings import SinaraSettings
+from .settings import _SinaraSettings
