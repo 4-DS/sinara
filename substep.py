@@ -16,7 +16,7 @@ import sys, traceback
 from IPython.core.display import Markdown, display
 
 from .fs import SinaraFileSystem
-from .settings import SinaraSettings
+from .settings import _SinaraSettings
 from ._version import __version__
 
 import logging
@@ -185,7 +185,7 @@ def get_pipeline_params(*, pprint=False):
         print("\n")
 
     return pipeline_params
-    
+
 def get_step_params(*, pprint=False):
     params_file_name = "params/step_params.json"
     if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
@@ -196,9 +196,6 @@ def get_step_params(*, pprint=False):
        params = json.load(json_file)
     
     step_params = params["step_params"]
-
-    if not step_params.get("step_name"):
-        raise Exception(f"In the file {params_file_name} 'step_name' param is not defined. It's mandatory. ")
     
     if pprint:
         print_line_as_bold("Step params:")
@@ -206,6 +203,9 @@ def get_step_params(*, pprint=False):
         print("\n")
         
     return step_params
+
+def get_user():
+    return _SinaraSettings.get_user()
 
 class NotebookSubstep:
     """
@@ -227,10 +227,10 @@ class NotebookSubstep:
         
         get_tmp_prepared()
         
-        default_env_name = "user"
-        default_pipeline_name = "pipeline"
-        default_zone_name = "zone"
-        default_step_name = "step"
+        default_env_name = "user"  # for interactive mode
+        #default_pipeline_name = "pipeline" # mandatary in pipeline params
+        default_zone_name = "zone" # optional param
+        default_step_name = _SinaraSettings.get_default_step_name()
                 
         self._pipeline_params = pipeline_params
         self._step_params = step_params
@@ -240,14 +240,19 @@ class NotebookSubstep:
         self._metrics = {}
         self._metrics["run_id"] = get_curr_run_id()
         self._env_name = pipeline_params.get("env_name") or default_env_name
-        self._pipeline_name = pipeline_params.get("pipeline_name") or default_pipeline_name
-        #if not self._pipeline_name:
-        #    raise Exception("'pipeline_name' must be specified within pipeline_params")
+        self._pipeline_name = pipeline_params.get("pipeline_name") #or default_pipeline_name
+        
+        if not self._pipeline_name:
+            raise Exception("'pipeline_name' must be specified within pipeline_params")
+        
         self._zone_name = pipeline_params.get("zone_name") or default_zone_name
         
-        # TODO
-        # step_name could be defined at step_params level?
-        self._step_name = step_params.get("step_name") or default_step_name #or Path(os.getcwd()).name
+        step_name = step_params.get("step_name") or default_step_name
+        
+        if not step_name:
+            raise Exception(f"'step_name' param is not defined. It's mandatory. ")
+
+        self._step_name = step_name
         
         self._registered_inputs = []
         self._registered_outputs = []
@@ -334,7 +339,7 @@ class NotebookSubstep:
     
     def _outputs_url(self):
         """Returns hdfs path where all output entities are stored"""
-        env_path = SinaraSettings.get_env_path(self._env_name)
+        env_path = _SinaraSettings.get_env_path(self._env_name)
         outputs_url = f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}/{self._run_id}"
         return outputs_url
 
@@ -345,17 +350,17 @@ class NotebookSubstep:
 
     def _component_cache_url(self):
         """Returns local path where managed cached entities are stored for current component"""
-        env_path = SinaraSettings.get_env_path(self._env_name)
+        env_path = _SinaraSettings.get_env_path(self._env_name)
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
 
     def _cache_url(self):
         """Returns local path where managed cached entities are stored for current run"""
-        env_path = SinaraSettings.get_tmp_path(self._env_name)
+        env_path = _SinaraSettings.get_tmp_path(self._env_name)
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}/{self._run_id}"
 
     def _step_cache_url(self):
         """Returns local path where managed cached entities are stored for current component"""
-        env_path = SinaraSettings.get_tmp_path(self._env_name)
+        env_path = _SinaraSettings.get_tmp_path(self._env_name)
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
             
     def add_metric(self, metric_name, metric_value):
@@ -613,7 +618,7 @@ class NotebookSubstep:
 
     def last_run_id(self, step_name, env_name, pipeline_name, zone_name, entity_name):
         
-        env_path = SinaraSettings.get_env_path(env_name)
+        env_path = _SinaraSettings.get_env_path(env_name)
         
         #print(env_path)
         
@@ -635,7 +640,7 @@ class NotebookSubstep:
         entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
 
      
-        env_path = SinaraSettings.get_env_path(env_name)
+        env_path = _SinaraSettings.get_env_path(env_name)
         entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
         
         if data_type == 'inputs':
@@ -724,7 +729,7 @@ class NotebookSubstep:
 
         entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
      
-        env_path = SinaraSettings.get_env_path(env_name)
+        env_path = _SinaraSettings.get_env_path(env_name)
         entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
         
         if data_type == 'inputs':
@@ -736,7 +741,7 @@ class NotebookSubstep:
             
             entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
      
-            env_path = SinaraSettings.get_env_path(env_name)
+            env_path = _SinaraSettings.get_env_path(env_name)
             entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
         
 
@@ -750,7 +755,7 @@ class NotebookSubstep:
             
             entity_full_name = self._get_entity_full_name(step_name, env_name, pipeline_name, zone_name, entity_name)
      
-            env_path = SinaraSettings.get_env_path(env_name)
+            env_path = _SinaraSettings.get_env_path(env_name)
             entity_url = f"{env_path}/{pipeline_name}/{zone_name}/{step_name}/{run_id}/{entity_name}"
         
             return {entity_full_name: entity_url }

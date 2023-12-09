@@ -4,11 +4,14 @@ import sys
 sys.path.append('../../sinara')
 
 # importing
-from sinara.settings.settings import _SinaraSettings
+from sinara.settings.settings import __SinaraSettings
 
 import json
 import os
-class SinaraSettings(_SinaraSettings):
+
+from pathlib import Path
+
+class _SinaraSettings(__SinaraSettings):
     def get_tmp_paths():
         return {
             "test": "/data/tmp/test",
@@ -18,7 +21,7 @@ class SinaraSettings(_SinaraSettings):
 
     def get_tmp_path(env_name):
 
-        tmp_paths = SinaraSettings.get_tmp_paths()
+        tmp_paths = _SinaraSettings.get_tmp_paths()
         if env_name not in tmp_paths:
             raise Exception("Unexpected env_name value:" + env_name)
 
@@ -31,7 +34,7 @@ class SinaraSettings(_SinaraSettings):
         data_paths = {
             "test": "/data/products",
             "prod": "/data/production",
-            "user": f"/data/home/{SinaraSettings.get_user()}"
+            "user": f"/data/home/{_SinaraSettings.get_user()}"
         }
 
         custom_data_paths = {}
@@ -44,7 +47,12 @@ class SinaraSettings(_SinaraSettings):
         return data_paths
 
     def get_env_path(env_name):
-        env_paths = SinaraSettings.get_data_paths()
+        env_paths = _SinaraSettings.get_data_paths()
         if env_name not in env_paths:
             raise Exception("Unexpected env_name value:" + env_name)
         return env_paths[env_name]
+      
+    @staticmethod
+    def get_default_step_name():
+        step_folder_split = Path(os.getcwd()).name.split("-")
+        return '-'.join(step_folder_split[1::]) if len(step_folder_split) > 1 else None
