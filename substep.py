@@ -524,7 +524,11 @@ class NotebookSubstep:
         
         
     def print_interface_info(self):
-        """Prints inputs, outputs, tmp urls and cache usage info"""
+        """Prints step name, inputs, outputs, tmp urls and cache usage info"""
+        
+        print_line_as_bold("STEP NAME:")
+        pp.pprint(self.step_name)
+        print("\n")
         
         if self._inputs_for_print:
             print_line_as_bold("INPUTS:")
