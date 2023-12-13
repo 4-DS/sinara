@@ -292,7 +292,12 @@ class NotebookSubstep:
             step_params,
             substeps_params,
             True)
+        
+        self.setLoggingLevel('INFO')
 
+    def setLoggingLevel(self, level):
+        logging.root.setLevel(level)
+        
 # The idea of a tool which creates structure of steps in Git. The tool will be in a separate repository
     def get_visualizer_report_name(self):
         import uuid;
