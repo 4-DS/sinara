@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import hashlib
+import json
 
 def process_artifacts_archive(bentoservice, bentoservice_root_dir):
     bentoservice.postprocess(bentoservice_root_dir)
@@ -30,3 +31,8 @@ def compute_md5(file_name):
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
+
+def save_bentoservice_profile(bentoservice_root_dir, bentoservice_profile):
+    profile_file = os.path.join(bentoservice_root_dir, 'bentoservice_profile.json')
+    with open(profile_file, 'w+') as f:
+        json.dump(bentoservice_profile, f)
