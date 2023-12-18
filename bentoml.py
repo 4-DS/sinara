@@ -1,6 +1,6 @@
 from .fs import SinaraFileSystem
 from .substep import get_curr_run_id, get_curr_notebook_name
-from .utils import process_artifacts_archive, process_service_version
+from .utils import process_artifacts_archive, process_service_version, save_bentoservice_profile
 import os
 import shutil
 from pathlib import Path
@@ -74,6 +74,9 @@ def save_bentoservice( bentoservice, *, path, service_version = None ):
         
     if not hasattr(bentoservice, 'service_version'):
         process_service_version(bentoservice, bentoservice_dir)
+    
+    if hasattr(bentoservice, 'service_profile'):
+        save_bentoservice_profile(bentoservice_dir, bentoservice.service_profile)
     
     #make zip file for bento service
     bentoservice_zipfile =  f"{tmppath}/{runid}_{bentoservice_name}.model" 
