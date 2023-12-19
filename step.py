@@ -817,6 +817,7 @@ class StepReport:
                 fs.put(hmtl_local_business_report_path,target_business_report_path)
                 fs.put(local_report_path,target_report_path_ipynb)
                 fs.put(local_metrics_path,target_metrics_path)
+                fs.touch(f"{target_reports_dir_path}/_SUCCESS")
 
                 os.remove(hmtl_local_report_path)
                 os.remove(hmtl_local_business_report_path)
@@ -836,7 +837,7 @@ class StepReport:
                 
                 with open(local_runinfo_path, 'r+') as f:
                     local_runinfo_json = json.load(f)
-                    local_runinfo_json["result"] = 'SUCCESS'                    
+                    local_runinfo_json["result"] = 'SUCCESS'
                     f.seek(0)        # <--- should reset file position to the beginning.
                     json.dump(local_runinfo_json, f, indent=4)
                     f.truncate()     # remove remaining part
@@ -851,6 +852,7 @@ class StepReport:
                 fs.put(local_report_path,target_report_path)
                 fs.put(local_report_path_py,target_report_path_py)
                 fs.put(local_metrics_path,target_metrics_path)
+                fs.touch(f"{target_reports_dir_path}/_SUCCESS")
 
 class SinaraDiffReport:
     
