@@ -77,6 +77,7 @@ def save_bentoservice( bentoservice, *, path, service_version = None ):
     
     if hasattr(bentoservice, 'service_profile'):
         save_bentoservice_profile(bentoservice_dir, bentoservice.service_profile)
+        shutil.copytree("sinara/bentoservice", f"{bentoservice_dir}/ModelService/sinara/bentoservice")
     
     #make zip file for bento service
     bentoservice_zipfile =  f"{tmppath}/{runid}_{bentoservice_name}.model" 
