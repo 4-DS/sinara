@@ -1,5 +1,5 @@
-from .fs import SinaraFileSystem
-from .substep import get_curr_run_id, get_curr_notebook_name
+from ..fs import SinaraFileSystem
+from ..substep import get_curr_run_id, get_curr_notebook_name
 from .utils import process_artifacts_archive, process_service_version, save_bentoservice_profile
 import os
 import shutil
