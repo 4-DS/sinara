@@ -3,7 +3,7 @@ from bentoml.adapters import DataframeInput, JsonInput
 from bentoml.service.artifacts.common import TextFileArtifact, JSONArtifact
 from bentoml.utils.hybridmethod import hybridmethod
 from bentoml.exceptions import BentoMLException
-from .binary_artifact import BinaryFileArtifact
+from ..bentoservice.binary_artifact import BinaryFileArtifact
     
 @env(infer_pip_packages=True)
 @artifacts([
