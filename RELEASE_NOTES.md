@@ -15,3 +15,9 @@ Following topics addresses these kind of changes.
 3. Unnecessary default_param_values removed from the 'interface' cell.
 
 [Migration Guide to the Sinara Lib version 1.1.2](https://github.com/4-DS/sinara/blob/main/SINARA_1.1.2_MIGRATION_GUIDE.md)
+
+## Version 2.1.1
+1. BentoArchive class has been moved to bentoml folder. Please, consider to change import in your code:
+   ```from sinara.bentoml_artifacts import BentoArchive``` to ```from sinara.bentoml.bento_archive import BentoArchive```
+2. Added code to support BentoService profiles, in particular ONNX profile. Now Docker image with ONNX model can be created for production.
+3. Methods **save_bentoservice** and **load_bentoservice** can not be called in one notebook due to terchical realization details.
