@@ -14,4 +14,4 @@ Following topics addresses these kind of changes.
 2. Only substep params are defined in the 'parameters' cell and replaced by the job run.
 3. Unnecessary default_param_values removed from the 'interface' cell.
 
-[Migration Guide to the Sinara Lib version 1.1.2](https://github.com/4-DS/sinara/blob/0.1.2/SINARA_1.1.2_MIGRATION_GUIDE.md)
+[Migration Guide to the Sinara Lib version 1.1.2](https://github.com/4-DS/sinara/blob/main/SINARA_1.1.2_MIGRATION_GUIDE.md)
