@@ -20,4 +20,4 @@ Following topics addresses these kind of changes.
 1. BentoArchive class has been moved to bentoml folder. Please, consider to change import in your code:
    ```from sinara.bentoml_artifacts import BentoArchive``` to ```from sinara.bentoml.bento_archive import BentoArchive```
 2. Added code to support BentoService profiles, in particular ONNX profile. Now Docker image with ONNX model can be created for production.
-3. Methods **save_bentoservice** and **load_bentoservice** can not be called in one notebook due to terchical realization details.
+3. Methods **save_bentoservice** and **load_bentoservice** can not be called in one notebook due to technical realization details.
