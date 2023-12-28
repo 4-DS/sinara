@@ -54,9 +54,12 @@ def get_curr_notebook_output_name():
 def get_sinara_user_work_dir():
     return os.getenv("JUPYTER_SERVER_ROOT") or '/home/jovyan/work'
 
+def get_sinara_step_tmp_path():
+    return f"{os.getcwd()}/tmp"
+
 def get_tmp_prepared():
     if "DSML_CURR_RUN_ID_FROM_PLINE" not in os.environ:
-        valid_tmp_target_path = f'/data/tmp{os.getcwd().replace(get_sinara_user_work_dir(),"")}'
+        valid_tmp_target_path = f'/tmp/tmp{os.getcwd().replace(get_sinara_user_work_dir(),"")}'
         os.makedirs(valid_tmp_target_path, exist_ok=True)
         tmp_path = Path('./tmp')
         if tmp_path.is_symlink():
@@ -79,7 +82,7 @@ def get_tmp_prepared():
             if tmp_path.exists():
                 shutil.rmtree(tmp_path)
         
-        os.makedirs(get_sinara_component_tmp_path())
+        os.makedirs(get_sinara_step_tmp_path())
 
 
 def print_line_as_bold(str):
@@ -1044,38 +1047,3 @@ class NotebookSubstep:
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
         return registered_tmp_entities
-    
-class DSMLMetrics:
-
-    @staticmethod
-    def save_tmp_metrics(metrics):
-        tmp_path = get_sinara_component_tmp_path()
-        otput_nb_stem = Path(get_curr_notebook_output_name()).stem
-        metrics_file_name = f"{tmp_path}/{otput_nb_stem}.metrics.json"
-        print(f'save metric tmp file: {metrics_file_name}')
-        with open(metrics_file_name, 'w') as outfile:
-            json.dump(metrics, outfile)
-
-    @staticmethod
-    def read_tmp_metrics():
-        df_list = []
-        tmp_path = get_sinara_component_tmp_path()
-        for _file in glob.glob(tmp_path + '/' + f'*metrics.json'):
-            if os.path.isfile(_file):
-                with open(_file, 'r') as f:
-                    data = json.loads(f.read())
-                df = pd.json_normalize(data)
-                df_list.append(df)
-        result = pd.concat(df_list)
-        
-        from dateutil.parser import parse
-        
-        for col in result:
-            try:
-                parse(result[col].values[0], fuzzy=False)
-                result[col] = pd.to_datetime(result[col])
-            except ValueError:
-                pass
-            except TypeError:
-                pass
-        return result
