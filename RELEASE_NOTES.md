@@ -21,3 +21,5 @@ Following topics addresses these kind of changes.
    ```from sinara.bentoml_artifacts import BentoArchive``` to ```from sinara.bentoml.bento_archive import BentoArchive```
 2. Added code to support BentoService profiles, in particular ONNX profile. Now Docker image with ONNX model can be created for production.
 3. Methods **save_bentoservice** and **load_bentoservice** can not be called in one notebook due to technical realization details.
+4. If **step.XXX.py** ended up with the message: ```"Exception while deleting Spark temp dir: /tmp/spark-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX java.nio.file.NoSuchFileException: /tmp/spark-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX```, it is normal behaviour and it can be fixed by running:
+```rm -f /tmp/spark-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX```
