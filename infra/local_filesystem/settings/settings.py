@@ -14,9 +14,9 @@ from pathlib import Path
 class _SinaraSettings(__SinaraSettings):
     def get_tmp_paths():
         return {
-            "test": "/data/tmp/test",
-            "prod": "/data/tmp/prod",
-            "user": "/data/tmp/user"
+            "test": "/tmp/env/test",
+            "prod": "/tmp/env/prod",
+            "user": "/tmp/env/user"
         }
 
     def get_tmp_path(env_name):
