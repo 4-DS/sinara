@@ -24,7 +24,7 @@ import dataclasses
 def get_sinara_step_tmp_path():
     return f"{os.getcwd()}/tmp"
 
-def save_bentoservice( bentoservice, *, path, service_version = None ):
+def save_bentoservice( bentoservice, *, substep = None, path, service_version = None ):
     
     # Correct 'ensure_python' method in bentoml-init.sh
     def fix_bentoml_013_2(filepath):
@@ -43,14 +43,18 @@ def save_bentoservice( bentoservice, *, path, service_version = None ):
     fspath = path
     
     runid = get_curr_run_id()
+    bentoservice_name = os.path.basename(fspath)
+    
+    if not service_version and not substep:
+        raise Exception("There is no service_version or substep provided")
 
     if not service_version:
-        service_version = f'{get_curr_notebook_name()}.{runid}'
+        #<env>.<product>.<zone>.<ml_model>:<ml_model_run_id>
+        service_version = f'{substep.env_name}.{substep.pipeline_name}.{substep.zone_name}.{bentoservice_name}.{runid}'
     
     save_info = [f'BENTO_SERVICE={service_version}']
     
     #write bento service to tmp dir
-    bentoservice_name = os.path.basename(fspath)
     tmppath = get_sinara_step_tmp_path()
     bentoservice_dir = f"{tmppath}/{runid}/{bentoservice_name}"
     
