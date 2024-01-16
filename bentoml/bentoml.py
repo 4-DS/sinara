@@ -63,6 +63,7 @@ def save_bentoservice( bentoservice, *, substep = None, path, service_version = 
     
     if not hasattr(bentoservice, 'service_version'):
         bentoservice.set_version(service_version)
+        bentoservice.pack('service_version', service_version)
 
     bentoservice.save_to_dir(bentoservice_dir)
         
