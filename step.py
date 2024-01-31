@@ -300,13 +300,21 @@ class SinaraStepNotebook(SinaraStepModule):
         #if len(kernel_specs) == 1 and kernel_name != kernel_name_param:
         #    print_line_as_bold('\033[1m' + f"WARNING: conda_env '{kernel_name_param}' not exists in kernels, running defaut kernel '{kernel_name}'" + '\033[0m')
         #    kernel_name_param = kernel_name
-            
+        papaermill_kwargs = dict()
+        if params["params"]['step_params'].get('logging', False):
+            papaermill_kwargs = dict(
+                log_output=True,
+                stdout_file=sys.stdout,
+                stderr_file=sys.stderr,
+                progress_bar=False,
+            )
         try:
             jupyter_kernel_name = _get_jupyter_kernel_name()
             nn = papermill.execute.execute_notebook(temp_nb_name,
                                                         commit_report_path,
                                                         kernel_name=jupyter_kernel_name,
-                                                        parameters=params)
+                                                        parameters=params, 
+                                                        **papaermill_kwargs)
         except Exception as e:
             if hasattr(e, 'ename') and e.ename == 'StopExecution':
                 raise StopExecution
@@ -466,7 +474,7 @@ class SinaraStepPythonModule(SinaraStepModule):
         
         try:
             notebook_params = json.dumps(params["params"])
-            notebook_run_params = json.dumps(params["run_params"])
+            notebook_run_params = json.dumps(params.get("run_params", {}))
                 #run_result = run(f"python {self.input_nb_name} --params '{notebook_params}' --run_params '{notebook_run_params}' | tee {commit_report_path}.log", 
                 #                 shell=True, cwd=None, check=True)
                 
@@ -481,7 +489,8 @@ class SinaraStepPythonModule(SinaraStepModule):
                 
                 if child_process.returncode != 0:
                     raise Exception(f"SINARA Python module '{self.input_nb_name}' is failed!")
-
+        except Exception as e:
+            logging.error(f"{e=}", exc_info=True)
         finally:
             import pathlib
             commit_report_stem = Path(commit_report_path).stem
