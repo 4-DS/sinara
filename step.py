@@ -237,7 +237,7 @@ class SinaraStepNotebook(SinaraStepModule):
                 self.print_Step_requirements()
                 raise Exception(f"SINARA notebook requires a cell tagged by tag:'{tag}'")
 
-    def run(self):
+    def run(self, verbose_output=False):
         def _get_jupyter_kernel_name():
             desired_kernel = None
             if "kernel_name" in params["step_params"]:
@@ -303,10 +303,24 @@ class SinaraStepNotebook(SinaraStepModule):
             
         try:
             jupyter_kernel_name = _get_jupyter_kernel_name()
+
+            stdout = None
+            stderr = None
+            log_verbose = False
+            
+            if verbose_output:
+                stdout = sys.stdout
+                stderr = sys.stderr
+                log_verbose = True
+
             nn = papermill.execute.execute_notebook(temp_nb_name,
                                                         commit_report_path,
                                                         kernel_name=jupyter_kernel_name,
-                                                        parameters=params)
+                                                        parameters=params,
+                                                        log_output=log_verbose,
+                                                        autosave_cell_every=10,
+                                                        stdout_file=stdout,
+                                                        stderr_file=stderr)
         except Exception as e:
             if hasattr(e, 'ename') and e.ename == 'StopExecution':
                 raise StopExecution
