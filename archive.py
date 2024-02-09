@@ -28,7 +28,7 @@ class SinaraArchive:
         
     def pack_files_form_tmp_to_spark_df(self, tmp_dir):
         #.option("recursiveFileLookup", "true")
-        pathlist = Path(tmp_dir).glob('*')
+        pathlist = [x for x in Path(tmp_dir).glob(f'**/*') if not str(x.name).endswith(".parts") and not str(x.parent).endswith(".parts")]
         for path in pathlist:
             if  self.ROW_SIZE < Path(path).stat().st_size:
                 self._split_file(path, self.ROW_SIZE)
@@ -67,7 +67,7 @@ class SinaraArchive:
         Path(f"{parts_path}/_PARTS").touch()
         
     def _join_parts(self, path):
-        parts_dirlist = [x for x in Path(path).glob('*.parts') if x.is_dir()]
+        parts_dirlist = [x for x in Path(path).glob('**/*.parts') if x.is_dir()]
         for parts_dir in parts_dirlist:
             file_name = str(parts_dir.parent.joinpath(parts_dir.stem))
             with open(file_name, 'wb') as fout:
