@@ -4,6 +4,7 @@ from os import path
 from pathlib import Path
 from functools import partial
 from pyspark.sql.functions import regexp_replace,col,lit
+from urllib.parse import urlsplit
  
 def SinaraArchive_save_file(file_col, tmp_dir):
     '''
@@ -28,13 +29,18 @@ class SinaraArchive:
         
     def pack_files_form_tmp_to_spark_df(self, tmp_dir):
         #.option("recursiveFileLookup", "true")
+        tmp_url = tmp_dir
+        url = urlsplit(tmp_dir)
+        if not url.scheme:
+            tmp_url = f'file://{url.path}'
+
         pathlist = [x for x in Path(tmp_dir).glob(f'**/*') if not str(x.name).endswith(".parts") and not str(x.parent).endswith(".parts")]
         for path in pathlist:
             if  self.ROW_SIZE < Path(path).stat().st_size:
                 self._split_file(path, self.ROW_SIZE)
             
         df = self._spark.read.format("binaryFile").option("pathGlobFilter", "*").option("recursiveFileLookup", "true") \
-                .load(tmp_dir) \
+                .load(tmp_url) \
                 .filter(col('length') <= self.ROW_SIZE) \
                 .withColumn("relPath", regexp_replace('path', 'file:' + tmp_dir, '')) \
                 .drop("path")
