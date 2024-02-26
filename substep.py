@@ -178,6 +178,8 @@ def get_pipeline_params(*, pprint=False):
        params = json.load(json_file)
     
     pipeline_params = params["pipeline_params"]
+    if "SINARA_STEP_ENV_NAME" in os.environ:
+        pipeline_params["env_name"] = os.environ["SINARA_STEP_ENV_NAME"]
     
     if not pipeline_params.get("pipeline_name"):
             raise Exception(f"In the file {params_file_name} 'pipeline_name' param is not defined. It's mandatory. ")

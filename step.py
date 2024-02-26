@@ -51,6 +51,7 @@ class Step:
 
         if env_name is not None:
             run_parameters_to_print["env_name"] = env_name
+            os.environ["SINARA_STEP_ENV_NAME"] = env_name
         pprint.pprint(run_parameters_to_print, compact=True)
         print("\n")
         
@@ -316,7 +317,8 @@ class SinaraStepNotebook(SinaraStepModule):
             nn = papermill.execute.execute_notebook(temp_nb_name,
                                                         commit_report_path,
                                                         kernel_name=jupyter_kernel_name,
-                                                        parameters=params,
+                                                        # actual pipeline and step parameters are loaded in the notebook
+                                                        parameters={"substep_params": params["substep_params"]},
                                                         log_output=log_verbose,
                                                         autosave_cell_every=10,
                                                         stdout_file=stdout,
