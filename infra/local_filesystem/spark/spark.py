@@ -60,7 +60,8 @@ class SinaraSpark(_SinaraSpark):
                 port -= 1
                 sock.close()
                 break
-        return f"http://localhost:{port}"
+        from IPython.core.display import display, HTML
+        display(HTML(f"<a href='/proxy/{port}/jobs/' target='blank'>Open Spark UI</a>"))
 
     
     @staticmethod
