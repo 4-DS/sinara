@@ -24,6 +24,9 @@ import logging
 def get_sinara_version():
     return __version__
 
+def get_sinara_server_image_name():
+    return os.getenv("JUPYTER_IMAGE_SPEC", "UNKNOWN")
+
 class StopExecution(Exception):
     pass
 
@@ -409,7 +412,8 @@ class NotebookSubstep:
         run_info["pipeline_params"] = pipeline_params
         run_info["step_params"] = step_params
         run_info["substeps_params"] = substeps_params
-        run_info["sinara_version"] = get_sinara_version()  
+        run_info["sinara_version"] = get_sinara_version()
+        run_info["sinara_server_image"] = get_sinara_server_image_name()
 
         run_info["start_time"] = f"{start_time}"
         run_info["stop_time"] = f"{stop_time}"
