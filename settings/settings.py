@@ -5,18 +5,20 @@ from abc import (
   abstractmethod,
 )
 
-def read_cgroup_setting(cgroup_setting_file_path):
-    cgroup_setting_value = None
-    if os.path.isfile(cgroup_setting_file_path):
-        with open(cgroup_setting_file_path) as cgroup_setting:
-            cgroup_setting_value = cgroup_setting.read().strip()
-            if cgroup_setting_value is None or not cgroup_setting_value.isdigit():
-                raise Exception("Can't detect values from cgroups")
-    return int(cgroup_setting_value)
+#def read_cgroup_setting(cgroup_setting_file_path):
+#    cgroup_setting_value = None
+#    if os.path.isfile(cgroup_setting_file_path):
+#        with open(cgroup_setting_file_path) as cgroup_setting:
+#            cgroup_setting_value = cgroup_setting.read().strip()
+            
+#    if cgroup_setting_value is None or not cgroup_setting_value.isdigit():
+#        raise Exception("Can't detect values from cgroups")
+#        
+#    return int(cgroup_setting_value)
 
-MEM_LIMIT_FPATH = "/sys/fs/cgroup/memory/memory.limit_in_bytes"
-CPU_SHARES_FPATH = "/sys/fs/cgroup/cpu/cpu.cfs_quota_us"
-CPU_PERIOD_FPATH = "/sys/fs/cgroup/cpu/cpu.cfs_period_us"
+#MEM_LIMIT_FPATH = "/sys/fs/cgroup/memory/memory.limit_in_bytes"
+#CPU_SHARES_FPATH = "/sys/fs/cgroup/cpu/cpu.cfs_quota_us"
+#CPU_PERIOD_FPATH = "/sys/fs/cgroup/cpu/cpu.cfs_period_us"
 
 def get_spark_driver_memory(snr_server_memory):
     #recommendations: https://aws.amazon.com/blogs/big-data/best-practices-for-successfully-managing-memory-for-apache-spark-applications-on-amazon-emr/
@@ -27,10 +29,26 @@ def get_spark_driver_cores(snr_server_cpu):
     #considered having correct values on Sinara Server start
     return int(snr_server_cpu)
 
-class __SinaraSettings(ABC):
+def get_snv_server_mem_limit():
+    if "SINARA_SERVER_MEMORY_LIMIT" in os.environ:
+        return int(int(os.environ["SINARA_SERVER_MEMORY_LIMIT"])/1024/1024/1024)
+    else:
+        # For back compatibility
+        print("WARNING: Using default 4 Gb memory for Spark. Please, follow https://github.com/4-DS/sinara-tutorials/wiki/SinaraML-How-To") 
+        return 8
+        
+def get_snv_server_cores():
+    if "SINARA_SERVER_CORES" in os.environ:
+        return int(os.environ["SINARA_SERVER_CORES"])
+    else:
+        # For back compatibility
+        print("WARNING: Using default 4 cores for Spark. Please, follow https://github.com/4-DS/sinara-tutorials/wiki/SinaraML-How-To") 
+        return 4
 
-    SNR_SERVER_MEMORY_LIMIT = int(read_cgroup_setting(MEM_LIMIT_FPATH)/1024/1024/1024)
-    SNR_SERVER_CORES = int(read_cgroup_setting(CPU_SHARES_FPATH)/read_cgroup_setting(CPU_PERIOD_FPATH))
+class __SinaraSettings(ABC):
+    
+    SNR_SERVER_MEMORY_LIMIT = get_snv_server_mem_limit()
+    SNR_SERVER_CORES = get_snv_server_cores()
 
     SNR_SPARK_DRIVER_MEM_LIMIT = get_spark_driver_memory(SNR_SERVER_MEMORY_LIMIT)
     SNR_SPARK_DRIVER_CORES = get_spark_driver_cores(SNR_SERVER_CORES)
