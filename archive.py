@@ -36,7 +36,7 @@ class SinaraArchive:
 
         pathlist = [x for x in Path(tmp_dir).glob(f'**/*') if not str(x.name).endswith(".parts") and not str(x.parent).endswith(".parts")]
         for path in pathlist:
-            if  self.ROW_SIZE < Path(path).stat().st_size:
+            if Path(path).is_file() and self.ROW_SIZE < Path(path).stat().st_size:
                 self._split_file(path, self.ROW_SIZE)
             
         df = self._spark.read.format("binaryFile").option("pathGlobFilter", "*").option("recursiveFileLookup", "true") \
