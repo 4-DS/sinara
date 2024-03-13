@@ -30,7 +30,8 @@ class Step:
                 step_params_file_globs,
                 pipeline_params_file_globs = None,
                 env_name = None):
-        
+
+        os.environ["SNR_IS_JOB_RUN"] = "True"
         get_tmp_prepared()
         
         self.notebooks = []

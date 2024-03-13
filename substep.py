@@ -34,6 +34,8 @@ def isnotebook():
     try:
         shell = get_ipython().__class__.__name__
         if shell == 'ZMQInteractiveShell':
+            # if "SNR_IS_NOTEBOOK" not in os.environ:
+            #     os.environ["SNR_IS_NOTEBOOK"] = "True"
             return True   # Jupyter notebook or qtconsole
         elif shell == 'TerminalInteractiveShell':
             return False  # Terminal running IPython
@@ -89,14 +91,12 @@ def get_tmp_prepared():
 
 
 def print_line_as_bold(str):
-    
     if isnotebook():
         display(Markdown(f"**{str}**\n"))
     else:
         print(str)
 
-        
-    
+ 
 def ipynb_to_html(src_path, dst_path):
     
     import nbformat

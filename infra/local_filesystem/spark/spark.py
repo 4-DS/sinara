@@ -5,6 +5,7 @@ from pyspark.conf import SparkConf
 import socket
 import sys
 import math
+import os
 
 # setting Sinara abstract class
 sys.path.append('../../sinara')
@@ -64,6 +65,12 @@ class SinaraSpark(_SinaraSpark):
             
         return SinaraSpark._spark
 
+    @staticmethod
+    def is_job_run():
+        if "SNR_IS_JOB_RUN" in os.environ and os.environ["SNR_IS_JOB_RUN"] == 'True':
+            return True   # Jupyter notebook or qtconsole
+        else:
+            return False  # Other type (?)
     
     @staticmethod
     def ui_url():
@@ -78,9 +85,20 @@ class SinaraSpark(_SinaraSpark):
                 port -= 1
                 sock.close()
                 break
+
         from IPython.core.display import display, HTML
         display(HTML(f"<a href='/proxy/{port}/jobs/' target='blank'>Open Spark UI</a>"))
-
+        if SinaraSpark.is_job_run():
+            try:
+                import subprocess
+                from jupyter_server import serverapp
+                server_info = next(serverapp.list_running_servers())
+                url = f"http://{server_info['hostname']}:{server_info['port']}/proxy/{port}/jobs/"
+                formatted_url = f'print("Spark UI: \\033]8;;{url}\\033\\\\{url}\\033]8;;\\033\\\\")'
+                subprocess.call(['python', '-c', formatted_url])
+            except:
+                pass
+            
     
     @staticmethod
     def stop_session():
