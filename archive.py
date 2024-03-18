@@ -21,8 +21,8 @@ def SinaraArchive_save_file(file_col, tmp_dir):
             
 class SinaraArchive:
 
-    BLOCK_SIZE = 60 * 1024 * 1024
-    ROW_SIZE = 600 * 1024
+    BLOCK_SIZE = 100 * 1024 * 1024
+    ROW_SIZE = 1000 * 1024
     
     def __init__(self, spark):
         self._spark = spark;
@@ -35,16 +35,22 @@ class SinaraArchive:
             tmp_url = f'file://{url.path}'
 
         pathlist = [x for x in Path(tmp_dir).glob(f'**/*') if not str(x.name).endswith(".parts") and not str(x.parent).endswith(".parts")]
+        total_size = 0
         for path in pathlist:
-            if Path(path).is_file() and self.ROW_SIZE < Path(path).stat().st_size:
-                self._split_file(path, self.ROW_SIZE)
+            if Path(path).is_file():
+                total_size = total_size + 1
+                if self.ROW_SIZE < Path(path).stat().st_size:
+                    self._split_file(path, self.ROW_SIZE)
+        cores = int(os.environ['SINARA_SERVER_CORES']) if 'SINARA_SERVER_CORES' in os.environ else 5
+        threads = cores * 3
+        partitions = int(total_size / self.BLOCK_SIZE) if int(total_size / self.BLOCK_SIZE) > threads else threads
             
         df = self._spark.read.format("binaryFile").option("pathGlobFilter", "*").option("recursiveFileLookup", "true") \
                 .load(tmp_url) \
                 .filter(col('length') <= self.ROW_SIZE) \
                 .withColumn("relPath", regexp_replace('path', 'file:' + tmp_dir, '')) \
                 .drop("path")
-        return df
+        return df.repartition(partitions)
     
     def pack_files_from_tmp_to_store(self, tmp_dir, store_path):
         df = self.pack_files_form_tmp_to_spark_df(tmp_dir)
