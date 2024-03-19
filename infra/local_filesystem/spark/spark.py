@@ -47,7 +47,7 @@ class SinaraSpark(_SinaraSpark):
             return  "local["+vcores+"]"
     
     @staticmethod
-    def run_session(clusterSize=0 , app="SinaraML Spark App", conf=None, reuse_session=True, debug=True):
+    def run_session(clusterSize=0 , app="SinaraML Spark App", conf=None, reuse_session=True, debug=False):
         SinaraSpark.stop_session()
         print("Session is run")
         
