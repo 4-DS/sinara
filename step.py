@@ -239,7 +239,7 @@ class SinaraStepNotebook(SinaraStepModule):
                 self.print_Step_requirements()
                 raise Exception(f"SINARA notebook requires a cell tagged by tag:'{tag}'")
 
-    def run(self, verbose_output=False):
+    def run(self):
         def _get_jupyter_kernel_name():
             desired_kernel = None
             if "kernel_name" in params["step_params"]:
@@ -308,19 +308,30 @@ class SinaraStepNotebook(SinaraStepModule):
 
             stdout = None
             stderr = None
-            log_verbose = False
+            step_verbose = None
+            substep_verbose = None
             
+            if "verbose_output" in params["step_params"]:
+                step_verbose = params["step_params"]["verbose_output"]
+
+            if "verbose_output" in params["substep_params"]:
+                substep_verbose = params["substep_params"]["verbose_output"]
+
+            if substep_verbose is None:
+                verbose_output = step_verbose if step_verbose else False
+            else:
+                verbose_output = substep_verbose
+
             if verbose_output:
                 stdout = sys.stdout
                 stderr = sys.stderr
-                log_verbose = True
 
             nn = papermill.execute.execute_notebook(temp_nb_name,
                                                         commit_report_path,
                                                         kernel_name=jupyter_kernel_name,
                                                         # actual pipeline and step parameters are loaded in the notebook
                                                         parameters={"substep_params": params["substep_params"]},
-                                                        log_output=log_verbose,
+                                                        log_output=verbose_output,
                                                         autosave_cell_every=10,
                                                         stdout_file=stdout,
                                                         stderr_file=stderr)
