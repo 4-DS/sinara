@@ -426,16 +426,6 @@ class NotebookSubstep:
         run_info["outputs_url"] = self._outputs_url()
         run_info["notebook_report_url"] = self.make_data_url(self._step_name, self._env_name, self._pipeline_name, self._zone_name, f"reports.{get_curr_notebook_name()}", self._run_id, 'outputs')
         
-        # Image and Nexus Build Snapshot coordinates
-        #run_info["image_info"] = {
-        #    "hdfs_shapshot_runid": os.getenv("HDFS_SNAPSHOT_RUNID"),
-        #    "hdfs_snapshot_root_path": os.getenv("HDFS_SNAPSHOT_ROOT_PATH"),
-        #    "image_git_repo": os.getenv("IMAGE_GIT_REPO"),
-        #    "image_git_repo_commit": os.getenv("IMAGE_GIT_REPO_COMMIT")
-        #}
-
-        #pp.pprint(run_info)
-
         otput_nb_stem = Path(output_nb_name).stem
         run_info_file_name = f"tmp/{otput_nb_stem}.runinfo.json"
 
@@ -578,11 +568,6 @@ class NotebookSubstep:
             print_line_as_bold("TMP ENTITIES:")
             pp.pprint(self._tmp_entities_for_print)
             print("\n")
-            
-    @property
-    def metrics_dataframe(self):
-        """Returns metrics as pandas dataframe"""
-        return DSMLComponentMetrics.read_metrics()
     
     @property
     def metrics(self):

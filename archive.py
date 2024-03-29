@@ -28,7 +28,6 @@ class SinaraArchive:
         self._spark = spark;
         
     def pack_files_form_tmp_to_spark_df(self, tmp_dir):
-        #.option("recursiveFileLookup", "true")
         tmp_url = tmp_dir
         url = urlsplit(tmp_dir)
         if not url.scheme:

@@ -3,7 +3,7 @@ You should bring your notebook (substep) to the view:
 Example:
 ![image](https://github.com/4-DS/sinara/assets/71835176/460e005d-7f0f-496d-a7c5-bd22859fd354)
 
-In order to make this, please, follow the steps below:
+In order to make this follow the steps below please:
 
 1. Remove **pipeline_params** and **step_params** . 
    ![image](https://github.com/4-DS/sinara/assets/71835176/f0410cfc-30df-407a-b0f1-8f5c92c12c0e)

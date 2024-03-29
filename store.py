@@ -35,9 +35,6 @@ class SinaraStore:
         
         fs = SinaraFileSystem.FileSystem()
         fs.makedirs(store_path)
-        # for tmp_file_path in filenames:
-        #     store_file_path = str(Path(store_path, Path(tmp_file_path).name))
-        #     fs.put(tmp_file_path, store_file_path)
         tar_file_path = f'{tmp_dir}/files.tar'
         with tarfile.open(tar_file_path, 'w') as tar:
             for tmp_file_path in filenames:
@@ -69,9 +66,6 @@ class SinaraStore:
         # store_globs = fs.glob(store_path)
         # makedirs(tmp_dir, exist_ok=True)
         fs.makedirs(tmp_dir)
-        # for store_file_path in filenames:
-        #     tmp_file_path = str(Path(tmp_dir, Path(store_file_path).name))
-        #     fs.get(store_file_path, tmp_file_path)
         store_file_path = str(Path(store_path, 'files.tar'))
         tar_file_path = str(Path(tmp_dir, Path(store_file_path).name))
         fs.get(store_file_path, tar_file_path)
