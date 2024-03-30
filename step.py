@@ -178,13 +178,13 @@ class SinaraStepModule(ABC):
 class SinaraStepNotebook(SinaraStepModule):
 
     def __init__(self, nb_name, 
-                 params_file_name=None, #имя файла параметров. иначе берется файл  f'{Path(nb_name).stem}.params.json'
-                 sent_params = None, #паремтры посланные явно. Переопределяют параметры в файле параметров
+                 params_file_name=None, #parameters file name or by default will be  f'{Path(nb_name).stem}.params.json'
+                 sent_params = None, #explicit parameters will replace parameters in the params_file_name
                  replace_params_file = False, #params inside params_file_name must be either replaced by sent_params or joined with sent_params
-                 external_entity_catalogue = None, # словарь ресурсов. переопределяет ресурсы заданные в коде ноутбука
-                 env_name = None, #  переопределяет env в котором будет запущен ноутбук
-                 stand_name = None, #  переопределяет stand в котором будет запущен ноутбук
-                 standalone_run = False): # указывает что ноубук запускается в отдельном run-е (отдельно от других ноутбуков в компоненте)
+                 external_entity_catalogue = None, # resourses catalogue will replace resources than defined in the notebook's code
+                 env_name = None, #  redefine env where notebook will be run
+                 stand_name = None, #  redefine zone name in which notebook will be run
+                 standalone_run = False): # notebook will be executed in individual run (separately fron other notebooks in the step)
         self.input_nb_name = nb_name
         if params_file_name is None:
             substeps_params = get_run_papermill_params()["substeps_params"]
@@ -436,13 +436,13 @@ class SinaraStepNotebook(SinaraStepModule):
 class SinaraStepPythonModule(SinaraStepModule):
 
     def __init__(self, nb_name, 
-                 params_file_name=None, #имя файла параметров. иначе берется файл  f'{Path(nb_name).stem}.params.json'
-                 sent_params = None, #паремтры посланные явно. Переопределяют параметры в файле параметров
+                 params_file_name=None, #parameters file name or by default will be  f'{Path(nb_name).stem}.params.json'
+                 sent_params = None, #explicit parameters will replace parameters in the params_file_name
                  replace_params_file = False, #params inside params_file_name must be either replaced by sent_params or joined with sent_params
-                 external_entity_catalogue = None, # словарь ресурсов. переопределяет ресурсы заданные в коде ноутбука
-                 env_name = None, #  переопределяет env в котором будет запущен ноутбук
-                 stand_name = None, #  переопределяет stand в котором будет запущен ноутбук
-                 standalone_run = False): # указывает что ноубук запускается в отдельном run-е (отдельно от других ноутбуков в компоненте)
+                 external_entity_catalogue = None, # resourses catalogue will replace resources than defined in the notebook's code
+                 env_name = None, #  redefine env where notebook will be run
+                 stand_name = None, #  redefine zone name in which notebook will be run
+                 standalone_run = False): # notebook will be executed in individual run (separately fron other notebooks in the step)
         
         self.input_nb_name = nb_name
         if params_file_name is None:
