@@ -9,13 +9,6 @@ Sinara Lib being actively evolving so new features that makes life better can br
 
 Following topics addresses these kind of changes.
 
-## Version 1.1.2
-1. Added loading of pipeline params and step params to the dedicated cell in the notebook.
-2. Only substep params are defined in the 'parameters' cell and replaced by the job run.
-3. Unnecessary default_param_values removed from the 'interface' cell.
-
-[Migration Guide to the Sinara Lib version 1.1.2](https://github.com/4-DS/sinara/blob/main/SINARA_1.1.2_MIGRATION_GUIDE.md)
-
 ## Version 2.1.1
 1. BentoArchive class has been moved to bentoml folder. Please, consider to change import in your code:
    ```from sinara.bentoml_artifacts import BentoArchive``` to ```from sinara.bentoml.bento_archive import BentoArchive```
@@ -23,3 +16,11 @@ Following topics addresses these kind of changes.
 3. Methods **save_bentoservice** and **load_bentoservice** can not be called in one notebook due to technical realization details.
 4. If **step.XXX.py** ended up with the message: ```"Exception while deleting Spark temp dir: /tmp/spark-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX java.nio.file.NoSuchFileException: /tmp/spark-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX```, it is normal behaviour and it can be fixed by running:
 ```rm -f /tmp/spark-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX```
+
+## Version 1.1.2
+1. Added loading of pipeline params and step params to the dedicated cell in the notebook.
+2. Only substep params are defined in the 'parameters' cell and replaced by the job run.
+3. Unnecessary default_param_values removed from the 'interface' cell.
+
+[Migration Guide to the Sinara Lib version 1.1.2](https://github.com/4-DS/sinara/blob/main/SINARA_1.1.2_MIGRATION_GUIDE.md)
+
