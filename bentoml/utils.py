@@ -11,7 +11,7 @@ def process_service_version(bentoservice, bentoservice_root_dir):
     @api(input=JsonInput())
     def service_version(self, *args):
         """
-        Версия данного Bento сервиса.
+        THis BentoService version
         """
         return self.version'''
     
