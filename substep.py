@@ -792,10 +792,10 @@ class NotebookSubstep:
     
     def _get_validated_interface_data(self, data, *, required_keys, available_keys):
         """
-        Должно быть required && available
-        Добавить описание параметров
-        И пример из full step notebook
-        
+        TODO:
+        Should be required && available
+        Add parameters description
+        Add example from  full step notebook
         """
         if data:
             for required_key in required_keys:
