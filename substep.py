@@ -910,8 +910,6 @@ class NotebookSubstep:
                                                         registered_inputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        #pp.pprint(registered_inputs)
-        #print("\n")
         return registered_inputs
             
     def outputs(self, *, env_name="curr_env_name", pipeline_name="curr_pipeline_name", zone_name="curr_zone_name"):     
@@ -936,8 +934,6 @@ class NotebookSubstep:
                                                         registered_outputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        #pp.pprint(registered_outputs)
-        #print("\n")
         return registered_outputs
 
             
@@ -957,8 +953,6 @@ class NotebookSubstep:
                                                         registered_inputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        #pp.pprint(registered_inputs)
-        #print("\n")
         return registered_inputs
 
             
@@ -976,8 +970,6 @@ class NotebookSubstep:
                                                         registered_outputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        #pp.pprint(registered_outputs)
-        #print("\n")
         return registered_outputs
             
             
@@ -996,8 +988,6 @@ class NotebookSubstep:
                                                         registered_tmp_inputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        #pp.pprint(registered_tmp_inputs)
-        #print("\n")
         return registered_tmp_inputs
 
             
@@ -1016,8 +1006,6 @@ class NotebookSubstep:
                                                         registered_tmp_outputs_info,
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
-        #pp.pprint(registered_tmp_outputs)
-        #print("\n")
         return registered_tmp_outputs
     
     def tmp_entities(self):     
