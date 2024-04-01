@@ -63,8 +63,6 @@ class SinaraStore:
         if len(filenames) == 0:
             raise Exception("file_globs doesn't match any file")
         
-        # store_globs = fs.glob(store_path)
-        # makedirs(tmp_dir, exist_ok=True)
         fs.makedirs(tmp_dir)
         store_file_path = str(Path(store_path, 'files.tar'))
         tar_file_path = str(Path(tmp_dir, Path(store_file_path).name))
