@@ -22,6 +22,8 @@ from subprocess import STDOUT, PIPE, Popen, run, CalledProcessError
 
 import nbformat
 import jupyter_client
+
+from sinara.common import importSinaraModuleClass
 from .fs import SinaraFileSystem
 
 class Step:
@@ -302,7 +304,10 @@ class SinaraStepNotebook(SinaraStepModule):
         #if len(kernel_specs) == 1 and kernel_name != kernel_name_param:
         #    print_line_as_bold('\033[1m' + f"WARNING: conda_env '{kernel_name_param}' not exists in kernels, running defaut kernel '{kernel_name}'" + '\033[0m')
         #    kernel_name_param = kernel_name
-            
+        _SinaraSettings = importSinaraModuleClass(module_name = "settings", class_name = "_SinaraSettings")
+        if hasattr(_SinaraSettings, '_lazy_init_settings'):
+            _SinaraSettings._lazy_init_settings()
+        
         try:
             jupyter_kernel_name = _get_jupyter_kernel_name()
 

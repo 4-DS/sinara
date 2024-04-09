@@ -1,5 +1,4 @@
 import os
-from sinara.common import importSinaraModuleClass
 
 from datetime import datetime
 from pathlib import Path
