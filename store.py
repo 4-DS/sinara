@@ -8,6 +8,8 @@ import glob
 
 class SinaraStore:
     """
+    SinaraStore is deprecated please use SinaraArchive
+
     SinaraStore is to work with data storage. The current Sinara store depends on a context.
     When you run components within cloud, store is S3.
     When you run components locally, Sinara store is local disk or sometimes S3, depending on the options.
