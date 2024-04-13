@@ -56,7 +56,8 @@ def get_curr_notebook_output_name():
     return os.getenv('DSML_CURR_NOTEBOOK_OUTPUT_NAME') or "standalone"
 
 def get_sinara_user_work_dir():
-    return os.getenv("JUPYTER_SERVER_ROOT") or '/home/jovyan/work'
+    nb_user = os.getenv("NB_USER") or "jovyan"
+    return os.getenv("JUPYTER_SERVER_ROOT") or f"/home/{nb_user}/work"
 
 def get_sinara_step_tmp_path():
     return f"{os.getcwd()}/tmp"

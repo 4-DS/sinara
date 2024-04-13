@@ -28,7 +28,8 @@ class _SinaraSettings(__SinaraSettings):
         return tmp_paths[env_name]
 
     def get_user():
-        return os.getenv("DSML_USER") or 'jovyan'
+        nb_user = os.getenv("NB_USER") or "jovyan"
+        return os.getenv("DSML_USER") or nb_user
 
     def get_data_paths():
         data_paths = {
