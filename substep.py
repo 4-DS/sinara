@@ -897,10 +897,10 @@ class NotebookSubstep:
             env_name = _input.get(ENV_NAME) #env_name if is_set_filter_by_env_name else self.env_name
             pipeline_name = _input.get(PIPELINE_NAME) #pipeline_name if is_set_filter_by_pipeline_name else self.pipeline_name
             zone_name = _input.get(ZONE_NAME) #zone_name if is_set_filter_by_zone_name else self.zone_name 
-            run_id = run_id if run_id != "last_run_id" else self.last_run_id(step_name, env_name, pipeline_name, zone_name, entity_name)
+            entity_run_id = run_id if run_id != "last_run_id" else self.last_run_id(step_name, env_name, pipeline_name, zone_name, entity_name)
 
 
-            entity_url, entity_fullname = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, run_id, 'inputs')
+            entity_url, entity_fullname = self.make_data_url(step_name, env_name, pipeline_name, zone_name, entity_name, entity_run_id, 'inputs')
 
             registered_inputs_info.append((f'full_{entity_name}', str, dataclasses.field(default=entity_fullname)))
             registered_inputs_info.append((entity_name, str, dataclasses.field(default=entity_url)))
