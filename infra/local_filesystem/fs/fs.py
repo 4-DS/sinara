@@ -38,13 +38,7 @@ class _SinaraLocalFileSystem(_SinaraFileSystem):
     @staticmethod
     def put(srcpath, dstpath):
         shutil.copyfile(srcpath, dstpath)
-        
-    @staticmethod
-    def get(srcpath, dstpath):
-        shutil.copyfile(srcpath, dstpath)
     
     @staticmethod
     def touch(path):
         Path(path).touch()
-
-
