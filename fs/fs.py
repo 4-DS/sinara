@@ -29,15 +29,8 @@ class _SinaraFileSystem(ABC):
     @abstractmethod
     def put(srcpath, dstpath):
         pass
-        
-    @staticmethod
-    @abstractmethod
-    def get(srcpath, dstpath):
-        pass
     
     @staticmethod
     @abstractmethod
     def touch(path):
         pass
-
-

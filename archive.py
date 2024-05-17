@@ -5,6 +5,7 @@ from pathlib import Path
 from functools import partial
 from pyspark.sql.functions import regexp_replace,col,lit
 from urllib.parse import urlsplit
+import logging
  
 def SinaraArchive_save_file(file_col, tmp_entity_dir):
     '''
@@ -27,7 +28,7 @@ class SinaraArchive:
     def __init__(self, spark):
         self._spark = spark;
         
-    def pack_files_form_tmp_to_spark_df(self, tmp_entity_dir):
+    def pack_files_from_tmp_to_spark_df(self, tmp_entity_dir):
         tmp_url = tmp_entity_dir
         url = urlsplit(tmp_entity_dir)
         if not url.scheme:
@@ -50,9 +51,14 @@ class SinaraArchive:
                 .withColumn("relPath", regexp_replace('path', 'file:' + tmp_entity_dir, '')) \
                 .drop("path")
         return df.repartition(partitions)
+
+    # Deprecate erroreneous method name
+    def pack_files_form_tmp_to_spark_df(self, tmp_entity_dir):
+        logging.warning("pack_files_form_tmp_to_spark_df method is deprecated, use pack_files_from_tmp_to_spark_df instead")
+        return self.pack_files_from_tmp_to_spark_df(tmp_dir)
     
     def pack_files_from_tmp_to_store(self, tmp_entity_dir, store_path):
-        df = self.pack_files_form_tmp_to_spark_df(tmp_entity_dir)
+        df = self.pack_files_from_tmp_to_spark_df(tmp_entity_dir)
         df.write.option("parquet.block.size", self.BLOCK_SIZE).mode("overwrite").parquet(store_path)
     
     def unpack_files_from_spark_df_to_tmp(self, df_archive, tmp_entity_dir):
