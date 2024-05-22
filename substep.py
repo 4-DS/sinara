@@ -1026,3 +1026,43 @@ class NotebookSubstep:
                                                     bases=(DSMLUrls,),
                                                     frozen=True)()
         return registered_tmp_entities
+
+    def tensorboard_log_dir(self, log_name):
+        return f"tmp/tensorboard/{log_name}/{self._run_id}"
+
+    def tensorboard_log_base_dir(self, log_name=""):
+        return f"tmp/tensorboard/{log_name}"
+
+    def prepare_tensorbord_logs(self, log_name: str, copy_prev_logs=True, prev_logs_env=None) -> tuple[str, str]:
+        """ Prepare tensorboard logs for an experiment, copy previous experiment logs from storage     
+        Args:
+            log_name (str): Log (Experiment) name, all runs will be placed under this name
+            copy_prev_logs (bool, optional): If true, previous experiment logs with name %log_name% will be copied from storage to
+                                             current component's tmp folder for easy comparison using tensorboard. Defaults to True.
+            prev_logs_env (str, optional): Env name (test, prod, etc) which tells sinara where to look for previous experiment logs on storage. Defaults to None.
+    
+        Returns:
+            tuple[str, str]: 1) Tensorboard log dir which can be used as log_dir argument for tensorboard cli or magic function in a cell
+                             2) Log writer dir, which should be used to tell a summary writer where to put current experiment logs
+        """
+        if copy_prev_logs:
+            self.copy_tensorboard_logs_from_store_to_tmp(log_name, prev_logs_env)
+        log_writer_dir = self.tensorboard_log_dir(log_name)
+        tensorboard_log_dir = self.tensorboard_log_base_dir(log_name)
+        print(f"Tensorboard log dir: {tensorboard_log_dir}\nLog writer dir: {log_writer_dir}")
+        return tensorboard_log_dir, log_writer_dir
+
+    def copy_tensorboard_logs_from_store_to_tmp(self, log_name="", log_env=None):
+        fs = SinaraFileSystem.FileSystem()
+        tmp_log_dir = self.tensorboard_log_base_dir(log_name)
+        env_name = log_env if log_env else self._env_name
+        env_path = _SinaraSettings.get_env_path(env_name)
+        step_path = f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
+        log_events = fs.glob(f"{step_path}/**/tensorboard/{log_name}/events.out*")
+        for log_path in log_events:
+            events_file = Path(log_path).name
+            run_id = Path(log_path).parts[-4]
+            tmp_path = f"{tmp_log_dir}/{run_id}/{events_file}"
+            os.makedirs(f"{tmp_log_dir}/{run_id}", exist_ok=True)
+            print(f"Copying previous logs from {log_path} to {tmp_path}", flush=True)
+            fs.get(log_path, tmp_path)

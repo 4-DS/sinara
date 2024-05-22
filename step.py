@@ -834,6 +834,21 @@ class StepReport:
                     if len(reports_urls) != 1:
                         raise Exception(f"Sinara step outputs must contain exactly one output url for reports like '*.reports.{nb_name}.ipynb' ")
                     target_reports_dir_path = outputs_urls[reports_urls[0]]
+      
+                    base_output_url = Path(target_reports_dir_path).parent
+                    tensorboard_output_dir = base_output_url / "tensorboard"
+
+                    tmp_tensorboard_log_dir = f"tmp/tensorboard"
+                    log_events = fs.glob(f"{tmp_tensorboard_log_dir}/**/{run_id}/events.out*")
+                    for log_path in log_events:
+                        p = Path(log_path)
+                        events_file = p.name
+                        log_name = p.parts[-3]
+                        output_dir = tensorboard_output_dir / log_name
+                        output_path = output_dir / events_file
+                        fs.makedirs(output_dir)
+                        print(f"Saving tensorboard logs {log_path} to {output_path}")
+                        fs.put(log_path, output_path)
 
                 target_runinfo_path = f"{target_reports_dir_path}/runinfo.json"
                 target_report_path = f"{target_reports_dir_path}/report.html"
@@ -865,6 +880,21 @@ class StepReport:
                     if len(reports_urls) != 1:
                         raise Exception(f"Sinara step outputs must contain exactly one output url for reports like '*.reports.{nb_name}.py' ")
                     target_reports_dir_path = outputs_urls[reports_urls[0]]
+
+                    base_output_url = Path(target_reports_dir_path).parent
+                    tensorboard_output_dir = base_output_url / "tensorboard"
+ 
+                    tmp_tensorboard_log_dir = f"tmp/tensorboard"
+                    log_events = fs.glob(f"{tmp_tensorboard_log_dir}/**/{run_id}/events.out*")
+                    for log_path in log_events:
+                        p = Path(log_path)
+                        events_file = p.name
+                        log_name = p.parts[-3]
+                        output_dir = tensorboard_output_dir / log_name
+                        output_path = output_dir / events_file
+                        fs.makedirs(output_dir)
+                        print(f"Saving tensorboard logs {log_path} to {output_path}")
+                        fs.put(log_path, output_path)
 
                 # Set SUCCESS if there had not been no exceptions before
                 
