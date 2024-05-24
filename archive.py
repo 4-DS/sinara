@@ -22,7 +22,7 @@ def SinaraArchive_save_file(file_col, tmp_entity_dir):
             
 class SinaraArchive:
 
-    BLOCK_SIZE = 100 * 1024 * 1024
+    BLOCK_SIZE = 10 * 1024 * 1024
     ROW_SIZE = 1000 * 1024
     
     def __init__(self, spark):
@@ -55,7 +55,7 @@ class SinaraArchive:
     # Deprecate erroreneous method name
     def pack_files_form_tmp_to_spark_df(self, tmp_entity_dir):
         logging.warning("pack_files_form_tmp_to_spark_df method is deprecated, use pack_files_from_tmp_to_spark_df instead")
-        return self.pack_files_from_tmp_to_spark_df(tmp_dir)
+        return self.pack_files_from_tmp_to_spark_df(tmp_entity_dir)
     
     def pack_files_from_tmp_to_store(self, tmp_entity_dir, store_path):
         df = self.pack_files_from_tmp_to_spark_df(tmp_entity_dir)
