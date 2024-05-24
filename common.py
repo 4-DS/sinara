@@ -2,6 +2,12 @@ import importlib
 import os
 
 def importSinaraModuleClass(module_name, class_name):
+    """
+    Import a Sinara module class
+    :param module_name:
+    :param class_name:
+    :return:
+    """
     #module = importlib.import_module('sinara.infra.local_filesystem.spark')
     if "INFRA_NAME" in os.environ:
         module_package = f"sinara.infra.{os.environ['INFRA_NAME']}.{module_name}"

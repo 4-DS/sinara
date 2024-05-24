@@ -21,14 +21,20 @@ def SinaraArchive_save_file(file_col, tmp_entity_dir):
         f_id.write(file_binary)
             
 class SinaraArchive:
-
+    """
+    SinaraArchive class
+    """
     BLOCK_SIZE = 10 * 1024 * 1024
     ROW_SIZE = 1000 * 1024
     
     def __init__(self, spark):
-        self._spark = spark;
+        self._spark = spark
         
-    def pack_files_from_tmp_to_spark_df(self, tmp_entity_dir):
+    def pack_files_from_tmp_to_spark_df(self, tmp_entity_dir : str):
+        """
+        Pack files from tmp_entity_dir to Spark DataFrame
+        tmp_entity_dir: tmp entity directory
+        """
         tmp_url = tmp_entity_dir
         url = urlsplit(tmp_entity_dir)
         if not url.scheme:
@@ -54,22 +60,44 @@ class SinaraArchive:
 
     # Deprecate erroreneous method name
     def pack_files_form_tmp_to_spark_df(self, tmp_entity_dir):
+        # TODO: Remove this method after the deprecation period
+        # warnings.warn("....", DeprecationWarning)
         logging.warning("pack_files_form_tmp_to_spark_df method is deprecated, use pack_files_from_tmp_to_spark_df instead")
         return self.pack_files_from_tmp_to_spark_df(tmp_entity_dir)
     
-    def pack_files_from_tmp_to_store(self, tmp_entity_dir, store_path):
+    def pack_files_from_tmp_to_store(self, tmp_entity_dir : str, store_path : str):
+        """
+        Pack files from tmp_entity_dir to store_path
+        tmp_entity_dir: tmp entity directory
+        store_path: store path
+        """
         df = self.pack_files_from_tmp_to_spark_df(tmp_entity_dir)
         df.write.option("parquet.block.size", self.BLOCK_SIZE).mode("overwrite").parquet(store_path)
     
-    def unpack_files_from_spark_df_to_tmp(self, df_archive, tmp_entity_dir):
+    def unpack_files_from_spark_df_to_tmp(self, df_archive, tmp_entity_dir : str):
+        """
+        Unpack files from Spark DataFrame to tmp_entity_dir
+        df_archive: Spark DataFrame
+        tmp_entity_dir: tmp entity directory
+        """
         df_archive.foreach(partial(SinaraArchive_save_file, tmp_entity_dir=tmp_entity_dir))
         self._join_parts(tmp_entity_dir)
     
-    def unpack_files_from_store_to_tmp(self, store_path, tmp_entity_dir):
+    def unpack_files_from_store_to_tmp(self, store_path : str, tmp_entity_dir : str):
+        """
+        Unpack parquet files from store_path to tmp_entity_dir
+        store_path: store path
+        tmp_entity_dir: tmp entity directory
+        """
         df = self._spark.read.parquet(store_path)
         self.unpack_files_from_spark_df_to_tmp(df, tmp_entity_dir)
         
-    def _split_file(self, path, chunk_size):
+    def _split_file(self, path : str, chunk_size : int):
+        """
+        Split file into parts
+        path: file path
+        chunk_size: chunk size
+        """
         parts_path = Path(f"{path.parent}/{path.name}.parts")
         parts_path.mkdir(parents=False, exist_ok=True)
         part_num = 0
@@ -83,7 +111,11 @@ class SinaraArchive:
                     part_num = part_num + 1
         Path(f"{parts_path}/_PARTS").touch()
         
-    def _join_parts(self, path):
+    def _join_parts(self, path : str):
+        """
+        Join parts
+        path: path
+        """
         parts_dirlist = [x for x in Path(path).glob('**/*.parts') if x.is_dir()]
         for parts_dir in parts_dirlist:
             file_name = str(parts_dir.parent.joinpath(parts_dir.stem))

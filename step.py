@@ -26,13 +26,22 @@ import jupyter_client
 from sinara.common import importSinaraModuleClass
 from .fs import SinaraFileSystem
 
-class Step:
-# Here we use 'reset_curr_run_id' to ensure an unique run_id every time we are running Sinara Step interactively 
-    def __init__(self, 
-                step_params_file_globs,
-                pipeline_params_file_globs = None,
-                env_name = None):
+from typing import Union
 
+class Step:
+    """
+    Sinara Step class.
+    """
+    # Here we use 'reset_curr_run_id' to ensure an unique run_id every time we are running Sinara Step interactively 
+    def __init__(self, 
+                step_params_file_globs : Union[str, list],
+                pipeline_params_file_globs : Union[str, list] = None,
+                env_name : str = None):
+        """
+        step_params_file_globs: list of step params file globs
+        pipeline_params_file_globs: list of pipeline params file globs
+        env_name: name of the environment
+        """
         os.environ["SNR_IS_JOB_RUN"] = "True"
         get_tmp_prepared()
         
@@ -92,7 +101,9 @@ class Step:
             reset_curr_run_id()
             
     def _get_run_params_file(self, run_params_file_path):
-        
+        """
+        Get run params file path
+        """
         if isinstance(run_params_file_path, str):
             run_params_file_path = [run_params_file_path]
             
@@ -125,14 +136,16 @@ class Step:
         self._curr_exception = e
     
     def handle_exit(self):
-        ''' Sets correct exit code '''
+        """Sets correct exit code"""
         # Suppress exception on sys.exit(0) - happens only in ipython
         if not interpreter_is_ipython():
             sys.exit(self.exit_code)
         
     @staticmethod
     def clear_cache():
-        #clear_cache removes files created inside current run
+        """
+        Clear cache : remove files created inside current run
+        """
         run_id = get_curr_run_id()
         for run_info_file_name in glob.glob(f"tmp/{run_id}*.runinfo.json"):
             with open(run_info_file_name) as json_file:
@@ -178,7 +191,9 @@ class SinaraStepModule(ABC):
         pass
 
 class SinaraStepNotebook(SinaraStepModule):
-
+    """
+    Sinara Step class for Notebook
+    """
     def __init__(self, nb_name, 
                  params_file_name=None, #parameters file name or by default will be  f'{Path(nb_name).stem}.params.json'
                  sent_params = None, #explicit parameters will replace parameters in the params_file_name
@@ -187,6 +202,16 @@ class SinaraStepNotebook(SinaraStepModule):
                  env_name = None, #  redefine env where notebook will be run
                  stand_name = None, #  redefine zone name in which notebook will be run
                  standalone_run = False): # notebook will be executed in individual run (separately fron other notebooks in the step)
+        """
+        nb_name: notebook name
+        params_file_name: parameters file name or by default will be  f'{Path(nb_name).stem}.params.json'
+        sent_params: explicit parameters will replace parameters in the params_file_name
+        replace_params_file: params inside params_file_name must be either replaced by sent_params or joined with sent_params
+        external_entity_catalogue: resourses catalogue will replace resources than defined in the notebook's code
+        env_name: redefine env where notebook will be run
+        stand_name: redefine zone name in which notebook will be run
+        standalone_run: notebook will be executed in individual run (separately fron other notebooks in the step)
+        """
         self.input_nb_name = nb_name
         if params_file_name is None:
             substeps_params = get_run_papermill_params()["substeps_params"]
@@ -214,6 +239,9 @@ class SinaraStepNotebook(SinaraStepModule):
         }
 
     def parse(self):
+        """
+        Parse the notebook
+        """
         from nbconvert import NotebookExporter
         self.nb_body, self.inputs = NotebookExporter().from_filename(self.input_nb_name)
         self.input_nb_dict = json.loads(self.nb_body)
@@ -242,6 +270,9 @@ class SinaraStepNotebook(SinaraStepModule):
                 raise Exception(f"SINARA notebook requires a cell tagged by tag:'{tag}'")
 
     def run(self):
+        """
+        Run the notebook
+        """
         def _get_jupyter_kernel_name():
             desired_kernel = None
             if "kernel_name" in params["step_params"]:
@@ -366,14 +397,21 @@ class SinaraStepNotebook(SinaraStepModule):
         """
         This is for back compatibility only. The method is deprecated.
         """
+        # TODO: Remove this method after the deprecation period
+        # warnings.warn("....", DeprecationWarning)
         return ''
 
     def reproduce(self, runinfo_path):
-        # TODO:
+        # TODO: Remove this method after the deprecation period
+        # warnings.warn("....", DeprecationWarning)
         pass
 
     def print_Step_requirements(self):
+        """
+        Print step requirements
+        """
         
+        # TODO: print -> logging
         print_line_as_bold("SINARA Notebook requirements:")
         print( '''\
         1. Notebook must contain separated cell tagged as "parameters"
@@ -385,13 +423,19 @@ class SinaraStepNotebook(SinaraStepModule):
         ''')
 
     def _get_output_notebook_name(self):
-
+        """
+        Get output notebook name
+        """
         run_id = get_curr_run_id()
         input_nb_stem = Path(self.input_nb_name).stem
 
         return f"{run_id}_{input_nb_stem}.ipynb"
 
-    def _clear_source_by_tag(self, tag):
+    def _clear_source_by_tag(self, tag : str):
+        """
+        Clear source by tag
+        tag: the tag to clear
+        """
         for cell in self.output_nb_dict["cells"]:
             metadata = cell["metadata"]
             if "tags" in metadata:
@@ -399,7 +443,11 @@ class SinaraStepNotebook(SinaraStepModule):
                 if tag in tags:
                     cell["source"] = []
 
-    def _remove_cell_by_tag(self, tag):
+    def _remove_cell_by_tag(self, tag : str):
+        """
+        Remove cell by tag
+        tag: the tag to remove
+        """
         for cell in list(self.output_nb_dict["cells"]):
             metadata = cell["metadata"]
             if "tags" in metadata:
@@ -408,7 +456,9 @@ class SinaraStepNotebook(SinaraStepModule):
                     self.output_nb_dict["cells"].remove(cell)
 
     def _append_serialize_run_cell(self):
-
+        """
+        Append serialize run cell
+        """
         start_time = datetime.now()
         serialize_run_cell = {'cell_type': 'code',
                               'execution_count': None,
@@ -439,7 +489,9 @@ class SinaraStepNotebook(SinaraStepModule):
         #self.output_nb_dict["cells"].insert(1, notebook_name_cell)
 
 class SinaraStepPythonModule(SinaraStepModule):
-
+    """
+    Sinara step module for python files
+    """
     def __init__(self, nb_name, 
                  params_file_name=None, #parameters file name or by default will be  f'{Path(nb_name).stem}.params.json'
                  sent_params = None, #explicit parameters will replace parameters in the params_file_name
@@ -479,6 +531,10 @@ class SinaraStepPythonModule(SinaraStepModule):
         pass
 
     def run(self):
+        """
+        Run step
+        """
+        
         self.output_nb_name = self._get_output_notebook_name()
 
         params = get_papermill_params(self.nb_params_name, 
@@ -535,14 +591,19 @@ class SinaraStepPythonModule(SinaraStepModule):
         """
         This is for back compatibility only. The method is deprecated.
         """
+        # TODO: Remove this method after the deprecation period
+        # warnings.warn("....", DeprecationWarning)
         return ''
 
     def reproduce(self, runinfo_path):
-        # TODO:
+        # TODO: Remove this method after the deprecation period
+        # warnings.warn("....", DeprecationWarning)
         pass
 
     def print_Step_requirements(self):
-        
+        """
+        Print step requirements
+        """
         print_line_as_bold("SINARA Python Module requirements:")
         print( '''\
         1. Module must contain the initialized variables:
@@ -551,7 +612,9 @@ class SinaraStepPythonModule(SinaraStepModule):
         ''')
 
     def _get_output_notebook_name(self):
-
+        """
+        Get output notebook name
+        """
         run_id = get_curr_run_id()
         input_nb_stem = Path(self.input_nb_name).stem
 
@@ -565,6 +628,15 @@ def get_papermill_params(
                 stand_name = None,
                 env_name = None
                 ):
+    """
+    Get papermill params
+    ci_params_file_name: the name of the parameters file
+    sent_params: explicit parameters will replace parameters in the params_file_name
+    replace_params_file: 
+    external_entity_catalogue:
+    stand_name: 
+    env_name:  redefine env where notebook will be run
+    """
     papermill_params = get_run_papermill_params()
     
     if replace_params_file:
@@ -591,10 +663,18 @@ def get_papermill_params(
 
     
 def set_run_papermill_params(step_params_file_path, pipeline_params_file_path=None):
+    """
+    Set papermill run params
+    step_params_file_path: the name of the parameters file
+    pipeline_params_file_path: the name of the pipeline parameters file
+    """
     os.environ["SINARA_STEP_PARAMS_FILE_PATH"] = step_params_file_path
     os.environ["SINARA_PIPELINE_PARAMS_FILE_PATH"] = '' if not pipeline_params_file_path else pipeline_params_file_path
 
 def get_run_papermill_params():
+    """
+    Get papermill run params
+    """
     step_params_file_path = os.environ["SINARA_STEP_PARAMS_FILE_PATH"]
     pipeline_params_file_path = os.environ["SINARA_PIPELINE_PARAMS_FILE_PATH"]
     
@@ -627,6 +707,12 @@ def get_run_papermill_params():
 def write_business_report(nb_commit_report, 
                           nb_business_report_file_name, 
                           runinfo_file_name):
+    """
+    Write business report
+    nb_commit_report: the name of the commit report notebook
+    nb_business_report_file_name: the name of the business report notebook
+    runinfo_file_name: the name of the run info file
+    """
     print(f"RUN INFO FILE NAME:{runinfo_file_name}")
     from nbconvert import NotebookExporter
     import json
@@ -655,6 +741,10 @@ def write_business_report(nb_commit_report,
 
 
 def create_business_report_summary(runinfo_dict):
+    """
+    Create business report summary
+    runinfo_dict: the run info dictionary
+    """
     # define business report temaple
     import uuid
     business_report_cell = {
@@ -725,9 +815,11 @@ def interpreter_is_ipython():
         return False
 
 class StepSafeguard:
-    
     @staticmethod
     def step_is_in_dir(globs):
+        """
+        Check if step is located in a directory
+        """
         if isinstance(globs, str):
             globs = [globs]
         for glob in globs:  
@@ -738,6 +830,9 @@ class StepSafeguard:
     
     @staticmethod
     def step_is_in_branch(globs):
+        """
+        Check if step is located in a branch
+        """
         if isinstance(globs, str):
             globs = [globs]
         for glob in globs:  
@@ -747,6 +842,9 @@ class StepSafeguard:
             
     @staticmethod
     def git_reset(branch=None):
+        """
+        Reset git repo to the last commit
+        """
         curr_branch = git.Repo().active_branch.name
         if not branch or curr_branch == branch:
             git.Repo().head.reset(index=True,working_tree=True)
@@ -756,9 +854,16 @@ class StepSafeguard:
             git.Repo().git.checkout(curr_branch)
 
 class StepReport:
-   
+    """
+    Sinara StepReport class
+    """
     @staticmethod
     def tag_commit_by_run(run_id=None, run_fs_path=None):
+        """
+        Tag the last commit by run id
+        run_id: the run id
+        run_fs_path: the run fs path
+        """
         run_id = run_id or StepReport._get_last_run_id()
         run_fs_path = run_fs_path or StepReport._get_run_fs_path(run_id)
         StepReport._fetch_all_tags()
@@ -767,6 +872,9 @@ class StepReport:
         
     @staticmethod
     def _fetch_all_tags():
+        """
+        Fetch all tags
+        """
         #TODO: git fetch --all --tags
         #https://linuxtut.com/en/76a3fb171e9143ff695e/
         
@@ -775,6 +883,10 @@ class StepReport:
        
     @staticmethod
     def _get_run_fs_path(run_id = None):
+        """
+        Get run fs path
+        run_id: the run id
+        """
         run_id = run_id or StepReport._get_last_run_id()
         run_info_file_names = glob.glob(f"tmp/{run_id}*.runinfo.json")
         if len(run_info_file_names) == 0:
@@ -790,6 +902,9 @@ class StepReport:
         
     @staticmethod
     def _get_last_run_id():
+        """
+        Get last run id
+        """
         run_info_file_names = glob.glob(f"tmp/run*.runinfo.json")
         if len(run_info_file_names) == 0:
             raise Exception("there is not *.runinfo.json files inside tmp folder")
@@ -798,6 +913,11 @@ class StepReport:
 
     @staticmethod
     def save(run_id=None):
+        """
+        Save step report
+        run_id: the run id
+        """
+
         run_id = run_id or get_curr_run_id()
         
         for run_info_file_name in glob.glob(f"tmp/{run_id}*.runinfo.json"):
@@ -918,7 +1038,6 @@ class StepReport:
                 fs.touch(f"{target_reports_dir_path}/_SUCCESS")
 
 class SinaraDiffReport:
-    
     _curr_branch = None
     _target_branch = None
     
