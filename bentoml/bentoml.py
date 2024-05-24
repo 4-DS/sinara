@@ -1,5 +1,5 @@
 from ..fs import SinaraFileSystem
-from ..substep import get_curr_run_id, get_curr_notebook_name
+from ..substep import get_curr_run_id, get_curr_notebook_name, NotebookSubstep
 from .utils import process_artifacts_archive, process_service_version, save_bentoservice_profile
 import os
 import shutil
@@ -13,6 +13,7 @@ import yaml
 import re
 from subprocess import STDOUT, PIPE, run, Popen
 import dataclasses
+from typing import Optional
 
 # def get_curr_run_id():
 #     if "DSML_CURR_RUN_ID" not in os.environ:
@@ -24,8 +25,14 @@ import dataclasses
 def get_sinara_step_tmp_path():
     return f"{os.getcwd()}/tmp"
 
-def save_bentoservice( bentoservice, *, substep = None, path, service_version = None ):
-    
+def save_bentoservice( bentoservice, *, substep : Optional[NotebookSubstep] = None, path : str, service_version : Optional[str] = None ):
+    """
+    save to fs model packed as a BentoService Python object
+    bentoservice: bentoml.BentoService
+    substep: NotebookSubstep
+    path: str
+    service_version: Optional[str]
+    """
     # Correct 'ensure_python' method in bentoml-init.sh
     def fix_bentoml_013_2(filepath):
         
@@ -37,8 +44,6 @@ def save_bentoservice( bentoservice, *, substep = None, path, service_version = 
             f.seek(0)
             f.write(fixed_file_content)
             f.truncate()
-
-    ''' save to fs model packed as a BentoService Python object '''
     
     fspath = path
     
@@ -103,6 +108,10 @@ def save_bentoservice( bentoservice, *, substep = None, path, service_version = 
     os.remove(f"{bentoservice_zipfile}.zip")
     
 def load_bentoservice(path, bentoservice_name: str = None):
+    """
+    load bentoservice from fs model packed as a BentoService Python object
+    path: str
+    """
     # read zip file from dir
     runid = get_curr_run_id()
 
@@ -133,13 +142,20 @@ def load_bentoservice(path, bentoservice_name: str = None):
     #load bentoml service
     return bentoml.load_from_dir(bentoservice_dir)
 
-def start_dev_bentoservice( bentoservice, use_popen = False, debug = False ):
-   #fix of bentoservice import bug
+def start_dev_bentoservice( bentoservice, use_popen : bool = False, debug : bool = False, port : int = 5000):
+    """
+    start bentoservice in dev mode
+    bentoservice: bentoml.BentoService
+    use_popen: bool
+    debug: bool
+    port: int 
+    """
+    #fix of bentoservice import bug
     __import__(bentoservice.__class__.__module__)
 
     if use_popen:
         bentoservice_dir = bentoservice._bento_service_bundle_path
-        bentoservice_cmd = ["python", "-m", "bentoml", "serve", "--port", "5000", bentoservice_dir]
+        bentoservice_cmd = ["python", "-m", "bentoml", "serve", "--port", str(port), bentoservice_dir]
         if debug:
             bentoservice_cmd.insert(-1, "--debug")
         bentoservice.process = Popen(bentoservice_cmd)
@@ -150,7 +166,7 @@ def start_dev_bentoservice( bentoservice, use_popen = False, debug = False ):
     ex = None
     for i in range(30):
         try:
-            healthz = requests.get("http://127.0.0.1:5000/healthz")
+            healthz = requests.get(f"http://127.0.0.1:{port}/healthz")
             healthz.raise_for_status()
         except Exception as e:
             ex = e
@@ -166,13 +182,21 @@ def start_dev_bentoservice( bentoservice, use_popen = False, debug = False ):
     
 
 def stop_dev_bentoservice( bentoservice ):
+    """
+    stop bentoservice in dev mode
+    bentoservice: bentoml.BentoService
+    """
     bentoservice.stop_dev_server()
 
 def save_bentoartifact_to_tmp(bentoservice, 
                                artifact_name="model", 
                                artifact_file_path=""):
-    ''' save bentoservice artifact to local cache, bentoservice has to be loaded beforehand  '''
-    
+    """
+    save bentoartifact to local cache, bentoservice has to be loaded beforehand
+    bentoservice: bentoml.BentoService
+    artifact_name: str
+    artifact_file_path: str
+    """
     if "." in os.path.basename(artifact_file_path):
         os.makedirs(os.path.dirname(artifact_file_path), exist_ok = True)
     else:
@@ -183,7 +207,11 @@ def save_bentoartifact_to_tmp(bentoservice,
     bentoservice.artifacts[artifact_name].save(artifact_file_path)
     
 def extract_artifacts_from_bentoservice(bentoservice_path, dest_folder=None):
-    
+    """
+    extract artifacts from bentoservice
+    bentoservice_path: str
+    dest_folder: str
+    """
     # read zip file from dir
     runid = get_curr_run_id()
     bentoservice_name = os.path.basename(bentoservice_path)

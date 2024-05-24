@@ -58,7 +58,10 @@ class BentoArchive(BentoService):
         )
         
     def postprocess(self, bentoservice_dir):
-        
+        """
+        postprocess method is used to generate bentoml.yml file
+        bentoservice_dir: directory of the bentoservice
+        """
         from pathlib import Path, PurePath
         
         import os, shutil
