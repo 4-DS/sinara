@@ -38,6 +38,9 @@ class _SinaraSpark(ABC):
 
     @staticmethod
     def ui_url():
+        """
+        Generate the Spark UI URL.
+        """
         def is_job_run():
             if "SNR_IS_JOB_RUN" in os.environ and os.environ["SNR_IS_JOB_RUN"] == 'True':
                 return True   # Jupyter notebook or qtconsole

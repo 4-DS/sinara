@@ -10,28 +10,37 @@ import json
 import os
 
 from pathlib import Path
+from typing import Optional
 
 class _SinaraSettings(__SinaraSettings):
-    def get_tmp_paths():
+    def get_tmp_paths() -> dict:
         return {
             "test": "/tmp/env/test",
             "prod": "/tmp/env/prod",
             "user": "/tmp/env/user"
         }
 
-    def get_tmp_path(env_name):
-
+    def get_tmp_path(env_name : str) -> str:
+        """
+        Get the tmp path for a given environment.
+        """
         tmp_paths = _SinaraSettings.get_tmp_paths()
         if env_name not in tmp_paths:
             raise Exception("Unexpected env_name value:" + env_name)
 
         return tmp_paths[env_name]
 
-    def get_user():
+    def get_user() -> str:
+        """
+        Get user name for the current environment.
+        """
         nb_user = os.getenv("NB_USER") or "jovyan"
         return os.getenv("DSML_USER") or nb_user
 
-    def get_data_paths():
+    def get_data_paths() -> dict:
+        """
+        Get data paths for the current environment.
+        """
         data_paths = {
             "test": "/data/products",
             "prod": "/data/production",
@@ -47,13 +56,19 @@ class _SinaraSettings(__SinaraSettings):
             data_paths = {**data_paths,**custom_data_paths}
         return data_paths
 
-    def get_env_path(env_name):
+    def get_env_path(env_name : str) -> str:
+        """
+        Get data path for a given environment.
+        """
         env_paths = _SinaraSettings.get_data_paths()
         if env_name not in env_paths:
             raise Exception("Unexpected env_name value:" + env_name)
         return env_paths[env_name]
       
     @staticmethod
-    def get_default_step_name():
+    def get_default_step_name() -> Optional[str]:
+        """
+        Get default step name.
+        """
         step_folder_split = Path(os.getcwd()).name.split("-")
         return '-'.join(step_folder_split[1::]) if len(step_folder_split) > 1 else None

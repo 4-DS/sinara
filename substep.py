@@ -27,9 +27,11 @@ def get_sinara_server_image_name():
     return os.getenv("JUPYTER_IMAGE_SPEC", "UNKNOWN")
 
 class StopExecution(Exception):
+    """Sinara Stop Exception"""
     pass
 
 def isnotebook():
+    """Check if we are running in a notebook"""
     try:
         shell = get_ipython().__class__.__name__
         if shell == 'ZMQInteractiveShell':
@@ -44,25 +46,32 @@ def isnotebook():
         return False      # Probably standard Python interpreter
 
 def set_curr_notebook_name(nb_name):
+    """Set current notebook name in env"""
     os.environ["DSML_CURR_NOTEBOOK_NAME"] = nb_name
     
 def get_curr_notebook_name():
+    """Get current notebook name from env"""
     return os.getenv('DSML_CURR_NOTEBOOK_NAME') or "standalone"
 
 def set_curr_notebook_output_name(nb_name):
+    """Set current notebook output name in env"""
     os.environ["DSML_CURR_NOTEBOOK_OUTPUT_NAME"] = nb_name
 
 def get_curr_notebook_output_name():
+    """Get current notebook output name from env"""
     return os.getenv('DSML_CURR_NOTEBOOK_OUTPUT_NAME') or "standalone"
 
 def get_sinara_user_work_dir():
+    """Get user work dir"""
     nb_user = os.getenv("NB_USER") or "jovyan"
     return os.getenv("JUPYTER_SERVER_ROOT") or f"/home/{nb_user}/work"
 
 def get_sinara_step_tmp_path():
+    """Get step tmp path"""
     return f"{os.getcwd()}/tmp"
 
 def get_tmp_prepared():
+    """Get valid tmp dir as symlink"""
     if "DSML_CURR_RUN_ID_FROM_PLINE" not in os.environ:
         valid_tmp_target_path = f'/tmp/step{os.getcwd().replace(get_sinara_user_work_dir(),"")}'
         os.makedirs(valid_tmp_target_path, exist_ok=True)
@@ -91,6 +100,7 @@ def get_tmp_prepared():
 
 
 def print_line_as_bold(str):
+    """Print line as bold"""
     if isnotebook():
         display(Markdown(f"**{str}**\n"))
     else:
@@ -98,7 +108,7 @@ def print_line_as_bold(str):
 
  
 def ipynb_to_html(src_path, dst_path):
-    
+    """Convert ipynb to html"""
     import nbformat
     from nbconvert import HTMLExporter
 
@@ -118,6 +128,7 @@ start_time = datetime.now()
 pp = pprint.PrettyPrinter()
 
 def get_curr_run_id():
+    """Get current run id"""
     if "DSML_CURR_RUN_ID" not in os.environ:
         run_id = reset_curr_run_id()
     else:
@@ -125,9 +136,11 @@ def get_curr_run_id():
     return run_id
 
 def get_sinara_step_tmp_path():
+    """Get step tmp path"""
     return f"{os.getcwd()}/tmp"
 
 def reset_curr_run_id():
+    """Reset current run id"""
     from datetime import datetime
     run_id = f"run-{datetime.now().strftime('%y-%m-%d-%H%M%S')}"
     # When sinara_component is running in Kubernetes CronJob
@@ -163,11 +176,19 @@ class DSMLUrls:
     DSMLUrls objects are created via methods of DSMLModule 
     """
         
-    def fullname(self, entity_name):
+    def fullname(self, entity_name : str):
+        """
+        fullname is a method that returns full name of Data Entity
+        entity_name is name of Data Entity
+        """
         full_entity_name = f'full_{entity_name}'
         return getattr(self, full_entity_name)
 
 def get_pipeline_params(*, pprint=False):
+    """
+    Get pipeline params
+    pprint - print pipeline params
+    """
     params_file_name = "params/step_params.json"
     
     if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
@@ -195,6 +216,10 @@ def get_pipeline_params(*, pprint=False):
     return pipeline_params
 
 def get_step_params(*, pprint=False):
+    """
+    Get step params
+    pprint - print step params
+    """
     params_file_name = "params/step_params.json"
     if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
         params_file_name = os.environ["SINARA_STEP_PARAMS_FILE_PATH"]
@@ -213,6 +238,7 @@ def get_step_params(*, pprint=False):
     return step_params
 
 def get_user():
+    """Get user"""
     return _SinaraSettings.get_user()
 
 class NotebookSubstep:
@@ -304,16 +330,19 @@ class NotebookSubstep:
         self.setLoggingLevel('INFO')
 
     def setLoggingLevel(self, level):
+        """Set logging level"""
         logging.root.setLevel(level)
         
 # The idea of a tool which creates structure of steps in Git. The tool will be in a separate repository
     def get_visualizer_report_name(self):
+        """Get visualizer report name"""
         import uuid;
         output_guid = str(uuid.uuid4())
         print({self.step_name})
         return f"{self.step_name}.{self.substep_name}.{output_guid}.json"
 
     def exit_in_visualize_mode(self):
+        """Exit visualize mode"""
         # Stop the notebook for visualizing a pipeline
         if "DESIGN_MODE" not in os.environ:
             pass

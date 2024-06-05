@@ -15,19 +15,28 @@ from sinara.spark.spark import _SinaraSpark
 from sinara.settings import _SinaraSettings
 
 def get_spark_driver_cores():
+    """
+    Get number of cores for spark driver
+    """
     return _SinaraSettings.SNR_SPARK_DRIVER_CORES
 
 def get_spark_driver_memory():
+    """
+    Get memory for spark driver
+    """
     return _SinaraSettings.SNR_SPARK_DRIVER_MEM_LIMIT
 
 class SinaraSpark(_SinaraSpark):
-    
+    """
+    Sinara Spark class
+    """
     _clustersize = 0
     _config = None
     _spark = None
 
     @staticmethod
     def session_is_stopped():
+        """Check if spark session is stopped"""
         if SinaraSpark._spark is None:
             return True
         if SinaraSpark._spark._sc._jsc is None:
@@ -36,6 +45,11 @@ class SinaraSpark(_SinaraSpark):
 
     @staticmethod
     def _master(clusterSize=0, debug=False):
+        """
+        Get master for spark session
+        clusterSize - number of nodes in cluster
+        debug - if debug mode is enabled (not used)
+        """
         SinaraSpark._clustersize = clusterSize
         if SinaraSpark._clustersize >= 1:
             raise Exception("Spark cluster size >=1 is not supported") 
@@ -48,7 +62,16 @@ class SinaraSpark(_SinaraSpark):
     
     @staticmethod
     def run_session(clusterSize=0 , app="SinaraML Spark App", conf=None, reuse_session=True, debug=False):
+        """
+        Run spark session
+        clusterSize - number of nodes in cluster
+        app - name of the app
+        conf - spark configuration
+        reuse_session - if session should be reused
+        debug - if debug mode is enabled
+        """
         SinaraSpark.stop_session()
+        # TODO: print -> logging
         print("Session is run")
         
         if not SinaraSpark.session_is_stopped() and not reuse_session:
@@ -68,6 +91,9 @@ class SinaraSpark(_SinaraSpark):
 
     @staticmethod
     def stop_session():
+        """
+        Stop spark session
+        """
         try:
             SinaraSpark._spark.stop()
         except:
@@ -76,7 +102,9 @@ class SinaraSpark(_SinaraSpark):
     
     @staticmethod
     def _conf(conf = None):  
-        
+        """
+        Get spark configuration
+        """
         if conf is None:
             conf = SparkConf(False)
 
