@@ -62,6 +62,9 @@ class SinaraSpark(_SinaraSpark):
             .master(master) \
             .config(conf=config)\
             .getOrCreate()
+
+        if debug:
+            SinaraSpark._spark._sc.setLogLevel("DEBUG")
             
         return SinaraSpark._spark
 
@@ -75,7 +78,7 @@ class SinaraSpark(_SinaraSpark):
 
     
     @staticmethod
-    def _conf(conf = None):  
+    def _conf(conf = None, debug=False):  
         
         if conf is None:
             conf = SparkConf(False)
@@ -92,6 +95,9 @@ class SinaraSpark(_SinaraSpark):
             part_of_spark_driver_memory = max( 1, int (spark_driver_memory * SinaraSpark._clustersize))
             conf.set("spark.driver.memory", str(part_of_spark_driver_memory) + "g")
             conf.set("spark.driver.maxResultSize", str(math.ceil(part_of_spark_driver_memory/3)) + "g")
+
+        if debug:
+            conf.set("spark.log.level", "DEBUG")
 
         SinaraSpark._config = conf
         return conf
