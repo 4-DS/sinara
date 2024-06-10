@@ -38,7 +38,7 @@ class SinaraArchive:
         total_size = 0
         for path in pathlist:
             if Path(path).is_file():
-                total_size = total_size + 1
+                total_size = total_size + Path(path).stat().st_size
                 if self.ROW_SIZE < Path(path).stat().st_size:
                     self._split_file(path, self.ROW_SIZE)
         cores = int(os.environ['SINARA_SERVER_CORES']) if 'SINARA_SERVER_CORES' in os.environ else 5
@@ -78,7 +78,7 @@ class SinaraArchive:
                 chunk = fin.read(chunk_size)
                 if not chunk: break
                 chunk_filename = f"{parts_path}/part-{part_num:04d}"
-                with open(chunk_filename, 'wb') as fout: 
+                with open(chunk_filename, 'wb') as fout:
                     fout.write(chunk)
                     part_num = part_num + 1
         Path(f"{parts_path}/_PARTS").touch()
