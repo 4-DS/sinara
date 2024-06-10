@@ -102,11 +102,11 @@ def save_bentoservice( bentoservice, *, substep = None, path, service_version = 
     #remove zip file from tmp
     os.remove(f"{bentoservice_zipfile}.zip")
     
-def load_bentoservice(path):
-
+def load_bentoservice(path, bentoservice_name: str = None):
     # read zip file from dir
     runid = get_curr_run_id()
-    bentoservice_name = os.path.basename(path)
+    if bentoservice_name is None:
+        bentoservice_name = os.path.basename(path)
     tmppath = get_sinara_step_tmp_path()
     bentoservice_zipfile =  f"{tmppath}/{runid}_{bentoservice_name}.model.zip"
     bentoservice_zipfile_crc = f"{tmppath}/.{runid}_{bentoservice_name}.model.zip.crc"
