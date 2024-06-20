@@ -604,7 +604,7 @@ def get_run_papermill_params():
 
     required_pipeline_params = ["env_name",
                                "pipeline_name",
-                               "zone_name",
+                               #"zone_name",
                                #"docker_image",
                                #"conda_env",
                           ]
