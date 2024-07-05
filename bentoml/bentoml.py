@@ -131,24 +131,26 @@ def load_bentoservice(path, bentoservice_name: str = None):
     #load bentoml service
     return bentoml.load_from_dir(bentoservice_dir)
 
-def start_dev_bentoservice( bentoservice, use_popen = False, debug = False ):
+def start_dev_bentoservice( bentoservice, use_popen = False, debug = False, port = 5000 ):
    #fix of bentoservice import bug
     __import__(bentoservice.__class__.__module__)
 
     if use_popen:
         bentoservice_dir = bentoservice._bento_service_bundle_path
-        bentoservice_cmd = ["python", "-m", "bentoml", "serve", "--port", "5000", bentoservice_dir]
+        bentoservice_cmd = ["python", "-m", "bentoml", "serve", "--port", str(port), bentoservice_dir]
         if debug:
             bentoservice_cmd.insert(-1, "--debug")
         bentoservice.process = Popen(bentoservice_cmd)
     else:
+        if port != 5000:
+            raise Exception("use_popen parameter should be True to use port other than 5000")
         bentoservice.start_dev_server(debug=debug)
     
     #wait 30 sec for bentoservice is really started
     ex = None
     for i in range(30):
         try:
-            healthz = requests.get("http://127.0.0.1:5000/healthz")
+            healthz = requests.get(f"http://127.0.0.1:{port}/healthz")
             healthz.raise_for_status()
         except Exception as e:
             ex = e
