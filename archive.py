@@ -21,6 +21,9 @@ def SinaraArchive_save_file(file_col, tmp_entity_dir):
         f_id.write(file_binary)
             
 class SinaraArchive:
+    """
+    TODOC
+    """
 
     BLOCK_SIZE = 10 * 1024 * 1024
     ROW_SIZE = 1000 * 1024
@@ -29,6 +32,10 @@ class SinaraArchive:
         self._spark = spark;
         
     def pack_files_from_tmp_to_spark_df(self, tmp_entity_dir):
+        """
+        TODOC
+        """
+
         tmp_url = tmp_entity_dir
         url = urlsplit(tmp_entity_dir)
         if not url.scheme:
@@ -54,18 +61,30 @@ class SinaraArchive:
 
     # Deprecate erroreneous method name
     def pack_files_form_tmp_to_spark_df(self, tmp_entity_dir):
+        """
+        TODOC
+        """
         logging.warning("pack_files_form_tmp_to_spark_df method is deprecated, use pack_files_from_tmp_to_spark_df instead")
         return self.pack_files_from_tmp_to_spark_df(tmp_entity_dir)
     
     def pack_files_from_tmp_to_store(self, tmp_entity_dir, store_path):
+        """
+        TODOC
+        """
         df = self.pack_files_from_tmp_to_spark_df(tmp_entity_dir)
         df.write.option("parquet.block.size", self.BLOCK_SIZE).mode("overwrite").parquet(store_path)
     
     def unpack_files_from_spark_df_to_tmp(self, df_archive, tmp_entity_dir):
+        """
+        TODOC
+        """
         df_archive.foreach(partial(SinaraArchive_save_file, tmp_entity_dir=tmp_entity_dir))
         self._join_parts(tmp_entity_dir)
     
     def unpack_files_from_store_to_tmp(self, store_path, tmp_entity_dir):
+        """
+        TODOC
+        """
         df = self._spark.read.parquet(store_path)
         self.unpack_files_from_spark_df_to_tmp(df, tmp_entity_dir)
         

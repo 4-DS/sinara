@@ -242,6 +242,9 @@ class SinaraStepNotebook(SinaraStepModule):
                 raise Exception(f"SINARA notebook requires a cell tagged by tag:'{tag}'")
 
     def run(self):
+        """
+        TODOC
+        """
         def _get_jupyter_kernel_name():
             desired_kernel = None
             if "kernel_name" in params["step_params"]:

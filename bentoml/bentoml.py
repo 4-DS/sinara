@@ -25,7 +25,9 @@ def get_sinara_step_tmp_path():
     return f"{os.getcwd()}/tmp"
 
 def save_bentoservice( bentoservice, *, substep = None, path, service_version = None ):
-    
+    """
+    TODOC
+    """
     # Correct 'ensure_python' method in bentoml-init.sh
     def fix_bentoml_013_2(filepath):
         
@@ -103,6 +105,9 @@ def save_bentoservice( bentoservice, *, substep = None, path, service_version = 
     os.remove(f"{bentoservice_zipfile}.zip")
     
 def load_bentoservice(path, bentoservice_name: str = None):
+    """
+    TODOC
+    """
     # read zip file from dir
     runid = get_curr_run_id()
     if bentoservice_name is None:
@@ -132,6 +137,9 @@ def load_bentoservice(path, bentoservice_name: str = None):
     return bentoml.load_from_dir(bentoservice_dir)
 
 def start_dev_bentoservice( bentoservice, use_popen = False, debug = False, port = 5000 ):
+    """
+    TODOC
+    """
    #fix of bentoservice import bug
     __import__(bentoservice.__class__.__module__)
 
@@ -166,6 +174,9 @@ def start_dev_bentoservice( bentoservice, use_popen = False, debug = False, port
     
 
 def stop_dev_bentoservice( bentoservice ):
+    """
+    TODOC
+    """
     bentoservice.stop_dev_server()
 
 def save_bentoartifact_to_tmp(bentoservice, 
@@ -183,7 +194,9 @@ def save_bentoartifact_to_tmp(bentoservice,
     bentoservice.artifacts[artifact_name].save(artifact_file_path)
     
 def extract_artifacts_from_bentoservice(bentoservice_path, dest_folder=None):
-    
+    """
+    TODOC
+    """
     # read zip file from dir
     runid = get_curr_run_id()
     bentoservice_name = os.path.basename(bentoservice_path)

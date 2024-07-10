@@ -168,6 +168,9 @@ class DSMLUrls:
         return getattr(self, full_entity_name)
 
 def get_pipeline_params(*, pprint=False):
+    """
+    TODOC
+    """
     params_file_name = "params/step_params.json"
     
     if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
@@ -195,6 +198,7 @@ def get_pipeline_params(*, pprint=False):
     return pipeline_params
 
 def get_step_params(*, pprint=False):
+    """TODOC"""
     params_file_name = "params/step_params.json"
     if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
         params_file_name = os.environ["SINARA_STEP_PARAMS_FILE_PATH"]
@@ -314,7 +318,9 @@ class NotebookSubstep:
         return f"{self.step_name}.{self.substep_name}.{output_guid}.json"
 
     def exit_in_visualize_mode(self):
-        # Stop the notebook for visualizing a pipeline
+        """
+        Stop the notebook for visualizing a pipeline
+        """
         if "DESIGN_MODE" not in os.environ:
             pass
         else: 
@@ -351,7 +357,7 @@ class NotebookSubstep:
             #      sys.exit(0)
     
     def _outputs_url(self):
-        """Returns hdfs path where all output entities are stored"""
+        """Returns storage path where all output entities are stored"""
         env_path = _SinaraSettings.get_env_path(self._env_name)
         outputs_url = f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}/{self._run_id}"
         return outputs_url
@@ -377,6 +383,9 @@ class NotebookSubstep:
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
             
     def add_metric(self, metric_name, metric_value):
+        """
+        TODOC
+        """
         self._metrics[metric_name] = metric_value
         
     def print_metrics(self):
@@ -467,6 +476,9 @@ class NotebookSubstep:
                   tmp_outputs=[],
                   tmp_entities=[]
                  ):
+        """
+        TODOC
+        """
         
         self._registered_inputs = self._get_validated_interface_data(inputs,
                                                                      required_keys=[STEP_NAME,
@@ -576,26 +588,44 @@ class NotebookSubstep:
     
     @property
     def env_name(self):
+        """
+        TODOC
+        """
         return self._env_name
 
     @property
     def pipeline_name(self):
+        """
+        TODOC
+        """
         return self._pipeline_name
 
     @property
     def zone_name(self):
+        """
+        TODOC
+        """
         return self._zone_name
 
     @property
     def step_name(self):
+        """
+        TODOC
+        """
         return self._step_name
 
     @property
     def run_id(self):
+        """
+        TODOC
+        """
         return self._run_id
         
     @property
     def substep_name(self):
+        """
+        TODOC
+        """
         if "DSML_CURR_NOTEBOOK_NAME" in os.environ:
             substep_notebook_name = os.getenv("DSML_CURR_NOTEBOOK_NAME")
             self._substep_name = substep_notebook_name.split('.')[0]
@@ -620,7 +650,9 @@ class NotebookSubstep:
             return None
 
     def last_run_id(self, step_name, env_name, pipeline_name, zone_name, entity_name):
-        
+        """
+        TODOC
+        """
         env_path = _SinaraSettings.get_env_path(env_name)
         
         #print(env_path)
@@ -810,7 +842,9 @@ class NotebookSubstep:
         return data
 
     def inputs(self, *, step_name, env_name="curr_env_name", pipeline_name="curr_pipeline_name", zone_name="curr_zone_name", run_id="last_run_id"):
-        
+        """
+        TODOC
+        """
         registered_inputs_info = []
         
         filtered_inputs = []
@@ -913,7 +947,9 @@ class NotebookSubstep:
         return registered_inputs
             
     def outputs(self, *, env_name="curr_env_name", pipeline_name="curr_pipeline_name", zone_name="curr_zone_name"):     
-
+        """
+        TODOC
+        """
         registered_outputs_info = []
         
         for _output in self._registered_outputs:
@@ -939,7 +975,9 @@ class NotebookSubstep:
             
 
     def custom_inputs(self):
-        
+        """
+        TODOC
+        """
         registered_inputs_info = []
         
         for _input in self._registered_custom_inputs:
@@ -957,7 +995,9 @@ class NotebookSubstep:
 
             
     def custom_outputs(self):     
-
+        """
+        TODOC
+        """
         registered_outputs_info = []
         
         for _output in self._registered_custom_outputs:
@@ -973,7 +1013,10 @@ class NotebookSubstep:
         return registered_outputs
             
             
-    def tmp_inputs(self):     
+    def tmp_inputs(self):
+        """
+        TODOC
+        """
 
         registered_tmp_inputs_info = []
         
@@ -992,7 +1035,9 @@ class NotebookSubstep:
 
             
     def tmp_outputs(self):     
-
+        """
+        TODOC
+        """
         registered_tmp_outputs_info = []
         
         for _tmp_output in self._registered_tmp_outputs:
@@ -1008,7 +1053,10 @@ class NotebookSubstep:
                                                     frozen=True)()
         return registered_tmp_outputs
     
-    def tmp_entities(self):     
+    def tmp_entities(self):
+        """
+        TODOC
+        """
 
         registered_tmp_entities_info = []
         
@@ -1028,9 +1076,15 @@ class NotebookSubstep:
         return registered_tmp_entities
 
     def tensorboard_log_dir(self, log_name):
+        """
+        TODOC
+        """
         return f"tmp/tensorboard/{log_name}/{self._run_id}"
 
     def tensorboard_log_base_dir(self, log_name=""):
+        """
+        TODOC
+        """
         return f"tmp/tensorboard/{log_name}"
 
     def prepare_tensorbord_logs(self, log_name: str, copy_prev_logs=True, prev_logs_env=None) -> tuple[str, str]:
@@ -1053,6 +1107,9 @@ class NotebookSubstep:
         return tensorboard_log_dir, log_writer_dir
 
     def copy_tensorboard_logs_from_store_to_tmp(self, log_name="", log_env=None):
+        """
+        TODOC
+        """
         fs = SinaraFileSystem.FileSystem()
         tmp_log_dir = self.tensorboard_log_base_dir(log_name)
         env_name = log_env if log_env else self._env_name

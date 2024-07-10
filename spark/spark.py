@@ -16,18 +16,27 @@ class _SinaraSpark(ABC):
     @staticmethod
     @abstractmethod
     def run_session(clusterSize=0 , app="my app", conf=None, reuse_session=True):
+        """
+        TODOC
+        """
         pass
 
     
     @staticmethod
     @abstractmethod
     def ui_url():
+        """
+        TODOC
+        """
         pass
     
     
     @staticmethod
     @abstractmethod
     def stop_session():
+        """
+        TODOC
+        """
         pass
     
     
