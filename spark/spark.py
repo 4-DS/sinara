@@ -17,7 +17,13 @@ class _SinaraSpark(ABC):
     @abstractmethod
     def run_session(clusterSize=0 , app="my app", conf=None, reuse_session=True):
         """
-        TODOC
+        Run spark session
+
+        @param clusterSize
+        @param app
+        @param conf
+        @param reuse_session
+        @return SinaraSpark session
         """
         pass
 
@@ -26,7 +32,7 @@ class _SinaraSpark(ABC):
     @abstractmethod
     def ui_url():
         """
-        TODOC
+        @return url to Apache Spark UI
         """
         pass
     
@@ -35,7 +41,7 @@ class _SinaraSpark(ABC):
     @abstractmethod
     def stop_session():
         """
-        TODOC
+        Run spark session
         """
         pass
     

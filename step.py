@@ -243,7 +243,7 @@ class SinaraStepNotebook(SinaraStepModule):
 
     def run(self):
         """
-        TODOC
+        Run all substeps using papermill engine
         """
         def _get_jupyter_kernel_name():
             desired_kernel = None

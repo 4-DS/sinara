@@ -198,7 +198,9 @@ def get_pipeline_params(*, pprint=False):
     return pipeline_params
 
 def get_step_params(*, pprint=False):
-    """TODOC"""
+    """
+    TODOC
+    """
     params_file_name = "params/step_params.json"
     if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
         params_file_name = os.environ["SINARA_STEP_PARAMS_FILE_PATH"]

@@ -22,7 +22,7 @@ def SinaraArchive_save_file(file_col, tmp_entity_dir):
             
 class SinaraArchive:
     """
-    TODOC
+    Provides effective way to store large files and pipeline entities in the SinaraML Storage.
     """
 
     BLOCK_SIZE = 10 * 1024 * 1024
@@ -33,7 +33,9 @@ class SinaraArchive:
         
     def pack_files_from_tmp_to_spark_df(self, tmp_entity_dir):
         """
-        TODOC
+        Packs files from temporary directory to the Apache Spark dataframe.
+        @param tmp_entity_dir - temporary directory with files to pack
+        @return Apache Spark dataframe
         """
 
         tmp_url = tmp_entity_dir
@@ -62,28 +64,34 @@ class SinaraArchive:
     # Deprecate erroreneous method name
     def pack_files_form_tmp_to_spark_df(self, tmp_entity_dir):
         """
-        TODOC
+        @Deprecated
         """
         logging.warning("pack_files_form_tmp_to_spark_df method is deprecated, use pack_files_from_tmp_to_spark_df instead")
         return self.pack_files_from_tmp_to_spark_df(tmp_entity_dir)
     
     def pack_files_from_tmp_to_store(self, tmp_entity_dir, store_path):
         """
-        TODOC
+        Packs files from temporary directory to store.
+        @param tmp_entity_dir - temporary directory with files to pack
+        @param store_path - path in the configured SinaraML store
         """
         df = self.pack_files_from_tmp_to_spark_df(tmp_entity_dir)
         df.write.option("parquet.block.size", self.BLOCK_SIZE).mode("overwrite").parquet(store_path)
     
     def unpack_files_from_spark_df_to_tmp(self, df_archive, tmp_entity_dir):
         """
-        TODOC
+        Unpacks files from the Apache Spark dataframe to the temporary directory
+        @param df_archive - Apache Spark dataframe with archived files
+        @param tmp_entity_dir - temporary directory with files to unpack
         """
         df_archive.foreach(partial(SinaraArchive_save_file, tmp_entity_dir=tmp_entity_dir))
         self._join_parts(tmp_entity_dir)
     
     def unpack_files_from_store_to_tmp(self, store_path, tmp_entity_dir):
         """
-        TODOC
+        Unpacks files from the store to the temporary directory
+        @param store_path - path in the configured SinaraML store
+        @param tmp_entity_dir - temporary directory with files to unpack
         """
         df = self._spark.read.parquet(store_path)
         self.unpack_files_from_spark_df_to_tmp(df, tmp_entity_dir)
