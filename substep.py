@@ -168,8 +168,16 @@ class DSMLUrls:
         return getattr(self, full_entity_name)
 
 def get_pipeline_params(*, pprint=False):
-    """
-    TODOC
+    """Get pipeline params
+
+    Args:
+        pprint (bool, optional): Print pipeline params. Defaults to False.
+
+    Raises:
+        Exception: If pipeline_name is not defined in params
+
+    Returns:
+        dict: pipepline params dictionary
     """
     params_file_name = "params/step_params.json"
     
@@ -198,8 +206,13 @@ def get_pipeline_params(*, pprint=False):
     return pipeline_params
 
 def get_step_params(*, pprint=False):
-    """
-    TODOC
+    """Get step params
+
+    Args:
+        pprint (bool, optional): Print step params. Defaults to False.
+
+    Returns:
+        dict: step params dictionary
     """
     params_file_name = "params/step_params.json"
     if "SINARA_STEP_PARAMS_FILE_PATH" in os.environ:
@@ -385,8 +398,11 @@ class NotebookSubstep:
         return f"{env_path}/{self._pipeline_name}/{self._zone_name}/{self._step_name}"
             
     def add_metric(self, metric_name, metric_value):
-        """
-        TODOC
+        """Add Substep metric
+
+        Args:
+            metric_name (str): Name of the metric
+            metric_value (any): Value of the metric
         """
         self._metrics[metric_name] = metric_value
         
@@ -478,8 +494,16 @@ class NotebookSubstep:
                   tmp_outputs=[],
                   tmp_entities=[]
                  ):
-        """
-        TODOC
+        """Setup substep interface
+
+        Args:
+            inputs (list, optional): Substep input entities. Defaults to [].
+            outputs (list, optional): Substep output entities. Defaults to [].
+            custom_inputs (list, optional): Substep custom input entities. Defaults to [].
+            custom_outputs (list, optional): Substep custom output entities. Defaults to [].
+            tmp_inputs (list, optional): Substep temporary input entities. Defaults to [].
+            tmp_outputs (list, optional): Substep temporary output entities. Defaults to [].
+            tmp_entities (list, optional): Substep custom temporary entities. Defaults to [].
         """
         
         self._registered_inputs = self._get_validated_interface_data(inputs,
@@ -585,48 +609,67 @@ class NotebookSubstep:
     
     @property
     def metrics(self):
-        """Returns copy of metrics"""
+        """ Supstep metrics
+
+        Returns:
+            dict: Supstep metrics
+        """
         return self._metrics.copy()
     
     @property
     def env_name(self):
-        """
-        TODOC
+        """ Substep environment name
+
+        Returns:
+            str: Name of the current environment
         """
         return self._env_name
 
     @property
     def pipeline_name(self):
-        """
-        TODOC
+        """ Name of the pipeline substep belongs to
+
+        Returns:
+            str: Pipeline name
         """
         return self._pipeline_name
 
     @property
     def zone_name(self):
-        """
-        TODOC
+        """Name of the zone substep belongs to
+
+        Returns:
+            str: Zone name
         """
         return self._zone_name
 
     @property
     def step_name(self):
-        """
-        TODOC
+        """Name of the step which current substep belongs to
+
+        Returns:
+            str: Step name
         """
         return self._step_name
 
     @property
     def run_id(self):
-        """
-        TODOC
+        """Current run id of the step
+
+        Returns:
+            str: Run id
         """
         return self._run_id
         
     @property
     def substep_name(self):
-        """
-        TODOC
+        """Current substep name
+
+        Raises:
+            Exception: if env variable DSML_CURR_NOTEBOOK_NAME is not set while running substep
+
+        Returns:
+            str: Substep name
         """
         if "DSML_CURR_NOTEBOOK_NAME" in os.environ:
             substep_notebook_name = os.getenv("DSML_CURR_NOTEBOOK_NAME")
@@ -652,8 +695,21 @@ class NotebookSubstep:
             return None
 
     def last_run_id(self, step_name, env_name, pipeline_name, zone_name, entity_name):
-        """
-        TODOC
+        """ Get the last run id stored on FS.
+            Provide argument values to filter and search the run id
+
+        Args:
+            step_name (str): Name of the step\n
+            env_name (str): Environment name\n
+            pipeline_name (str): Pipeline name\n
+            zone_name (str): Zone name\n
+            entity_name (str): Entity name\n
+
+        Raises:
+            Exception: If no run ids found for provided arguments (entity)
+
+        Returns:
+            str: last run id
         """
         env_path = _SinaraSettings.get_env_path(env_name)
         
@@ -844,8 +900,20 @@ class NotebookSubstep:
         return data
 
     def inputs(self, *, step_name, env_name="curr_env_name", pipeline_name="curr_pipeline_name", zone_name="curr_zone_name", run_id="last_run_id"):
-        """
-        TODOC
+        """ Substep Inputs
+
+        Args:
+            step_name (str): Name of the step
+            env_name (str, optional): Name of the environment. Defaults to "curr_env_name".
+            pipeline_name (str, optional): Name of the pipeline. Defaults to "curr_pipeline_name".
+            zone_name (str, optional): Name of the zone. Defaults to "curr_zone_name".
+            run_id (str, optional): Specific run id to get. Defaults to "last_run_id".
+
+        Raises:
+            Exception: If the are multiple steps in different zones and zone ambiguity cannot be resolved
+
+        Returns:
+            dict: Substep inputs
         """
         registered_inputs_info = []
         
@@ -949,8 +1017,15 @@ class NotebookSubstep:
         return registered_inputs
             
     def outputs(self, *, env_name="curr_env_name", pipeline_name="curr_pipeline_name", zone_name="curr_zone_name"):     
-        """
-        TODOC
+        """Substep outputs
+
+        Args:
+            env_name (str, optional): Name of the environment. Defaults to "curr_env_name".
+            pipeline_name (str, optional): Name of the pipeline. Defaults to "curr_pipeline_name".
+            zone_name (str, optional): Name of the zone. Defaults to "curr_zone_name".
+
+        Returns:
+            dict: Substep outputs
         """
         registered_outputs_info = []
         
@@ -977,8 +1052,10 @@ class NotebookSubstep:
             
 
     def custom_inputs(self):
-        """
-        TODOC
+        """Substep custom inputs
+
+        Returns:
+            dict: Custom inputs
         """
         registered_inputs_info = []
         
@@ -997,8 +1074,10 @@ class NotebookSubstep:
 
             
     def custom_outputs(self):     
-        """
-        TODOC
+        """Substep custom outputs
+
+        Returns:
+            dict: Custom outputs
         """
         registered_outputs_info = []
         
@@ -1016,10 +1095,11 @@ class NotebookSubstep:
             
             
     def tmp_inputs(self):
-        """
-        TODOC
-        """
+        """Substep temporary inputs
 
+        Returns:
+            dict: Temporary inputs
+        """
         registered_tmp_inputs_info = []
         
         for _tmp_input in self._registered_tmp_inputs:
@@ -1036,9 +1116,11 @@ class NotebookSubstep:
         return registered_tmp_inputs
 
             
-    def tmp_outputs(self):     
-        """
-        TODOC
+    def tmp_outputs(self):
+        """Substep temporary outputs
+
+        Returns:
+            str: Temporary outputs
         """
         registered_tmp_outputs_info = []
         
@@ -1056,10 +1138,11 @@ class NotebookSubstep:
         return registered_tmp_outputs
     
     def tmp_entities(self):
-        """
-        TODOC
-        """
+        """Substep temporary entities
 
+        Returns:
+            dict: Tempotrary entities
+        """
         registered_tmp_entities_info = []
         
         for _tmp_entity in self._registered_tmp_entities:
@@ -1078,14 +1161,25 @@ class NotebookSubstep:
         return registered_tmp_entities
 
     def tensorboard_log_dir(self, log_name):
-        """
-        TODOC
+        """Get log directory where metrics writers for tensorboard
+           will write metrics data
+
+        Args:
+            log_name (str): Name of the log (experiment)
+
+        Returns:
+            str: Log path relative to step folder
         """
         return f"tmp/tensorboard/{log_name}/{self._run_id}"
 
     def tensorboard_log_base_dir(self, log_name=""):
-        """
-        TODOC
+        """Get log directory for tensorboard where metrics of multiple runs stored
+
+        Args:
+            log_name (str, optional): Name of the log (experiment). Defaults to "".
+
+        Returns:
+            str: Base log path relative to step folder
         """
         return f"tmp/tensorboard/{log_name}"
 
@@ -1109,8 +1203,11 @@ class NotebookSubstep:
         return tensorboard_log_dir, log_writer_dir
 
     def copy_tensorboard_logs_from_store_to_tmp(self, log_name="", log_env=None):
-        """
-        TODOC
+        """Copy logs of an experiment from sinara storage to step tmp folder
+           
+        Args:
+            log_name (str, optional): Name of the log (experiment). Defaults to "".
+            log_env (_type_, optional): Name of environment of the experiment (log) to copy. Defaults to None.
         """
         fs = SinaraFileSystem.FileSystem()
         tmp_log_dir = self.tensorboard_log_base_dir(log_name)
