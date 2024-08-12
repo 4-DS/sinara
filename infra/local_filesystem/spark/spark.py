@@ -99,5 +99,7 @@ class SinaraSpark(_SinaraSpark):
         if debug:
             conf.set("spark.log.level", "DEBUG")
 
+        conf.set('spark.sql.execution.arrow.pyspark.enabled', 'true')
+
         SinaraSpark._config = conf
         return conf
