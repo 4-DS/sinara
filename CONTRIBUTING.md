@@ -2,7 +2,7 @@ The BDFL (Benevolent Dictator For Life) of our project is Dmitry (@Dmitry-Love),
 
 Any disagreements within the project team are resolved through forking and splitting the team. Changing the contribution rules can also only be done through a consensus among maintainers, including the BDFL.
 
-Dmitry, as the BDFL, single-handedly wrote the initial version and assembled the project team, earning his status and high trust. Everyone who joins the Sinara community is obligated to adhere to these rules without question.
+Dmitry, as the BDFL, single-handedly wrote the initial version and assembled the project team, earning his status and high trust. Everyone who joins the Sinara community is obligated to adhere to these rules without question. Decisions regarding the inclusion of participants in the "4-DS" organization or the exclusion of participants from the "4-DS" organization are made solely by the BDFL.
 
 By submitting a Commit, you grant the copyright holders of the "Sinara ML" software a non-exclusive, royalty-free license, valid worldwide and for the entire term of the exclusive right, to use your Commit as part of the "Sinara ML" software in any manner, including reproduction, modification, and other forms of use.
 
