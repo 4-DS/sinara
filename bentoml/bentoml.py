@@ -11,7 +11,7 @@ import bentoml
 import json
 import yaml
 import re
-from subprocess import STDOUT, PIPE, run, Popen
+from subprocess import STDOUT, PIPE, DEVNULL, run, Popen
 import dataclasses
 
 # def get_curr_run_id():
@@ -158,7 +158,10 @@ def start_dev_bentoservice( bentoservice, use_popen = False, debug = False, port
         bentoservice_cmd = ["python", "-m", "bentoml", "serve", "--port", str(port), bentoservice_dir]
         if debug:
             bentoservice_cmd.insert(-1, "--debug")
-        bentoservice.process = Popen(bentoservice_cmd)
+            bentoservice.process = Popen(bentoservice_cmd)
+        else:
+            bentoservice.process = Popen(bentoservice_cmd, stdout=DEVNULL, stderr=DEVNULL)
+        
     else:
         if port != 5000:
             raise Exception("use_popen parameter should be True to use port other than 5000")
