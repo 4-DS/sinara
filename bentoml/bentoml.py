@@ -24,7 +24,43 @@ import dataclasses
 def get_sinara_step_tmp_path():
     return f"{os.getcwd()}/tmp"
 
-def save_bentoservice( bentoservice, *, substep = None, path, service_version = None ):
+
+def _infer_pip_dependencies(bentoservice_dir):
+    requirements = []
+    with open(Path(bentoservice_dir) / 'requirements.txt', 'r') as f:
+        requirements = f.read().splitlines()
+
+    add_requirements = []
+    for package_name in requirements:
+        #remove version from package name
+        package_name = re.sub(r'(==|>|<)([\S]+)', '', package_name)
+
+        from pip._vendor import pkg_resources
+        package = pkg_resources.working_set.by_key[package_name]
+        #print([str(r) for r in package.requires()])  # retrieve deps from setup.py
+        for required_package_name in package.requires():
+            required_package_name = re.sub(r'(==|>|<)([\S ]+)', '', str(required_package_name))
+            from importlib.metadata import version
+            required_package_name = f"{required_package_name}=={version(required_package_name)}"
+            add_requirements.append(required_package_name)
+
+    with open(Path(bentoservice_dir) / 'requirements.txt', 'a') as f:
+        for i in set(add_requirements):
+            f.write(i)
+            f.write('\n')
+
+    bentoml_info = None
+    with open(Path(bentoservice_dir) / 'bentoml.yml', 'r') as f:
+        bentoml_info = yaml.safe_load(f)
+        for i in set(add_requirements):
+            bentoml_info['env']['pip_packages'].append(i)
+
+    if not bentoml_info is None:
+        with open(Path(bentoservice_dir) / 'bentoml.yml', 'w') as file:
+            yaml.dump(bentoml_info, file)
+
+
+def save_bentoservice( bentoservice, *, substep = None, path, service_version = None, infer_additional_pip_dependencies = False):
     """
     Save to model packed as a BentoService Python object to the file system
     @param bentoservice: bentoml.BentoService
@@ -78,6 +114,9 @@ def save_bentoservice( bentoservice, *, substep = None, path, service_version = 
     bentoservice.save_to_dir(bentoservice_dir)
         
     fix_bentoml_013_2(f'{bentoservice_dir}/bentoml-init.sh')
+
+    if infer_additional_pip_dependencies:
+        _infer_pip_dependencies(bentoservice_dir)
 
     save_info_file = os.path.join(bentoservice_dir, 'save_info.txt')
 
