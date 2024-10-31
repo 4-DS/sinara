@@ -1170,7 +1170,7 @@ class NotebookSubstep:
         Returns:
             str: Log path relative to step folder
         """
-        return f"tmp/tensorboard/{log_name}/{self._run_id}"
+        return f"tmp/tensorboard/{self._zone_name}/{log_name}/{self._run_id}"
 
     def tensorboard_log_base_dir(self, log_name=""):
         """Get log directory for tensorboard where metrics of multiple runs stored
@@ -1181,7 +1181,7 @@ class NotebookSubstep:
         Returns:
             str: Base log path relative to step folder
         """
-        return f"tmp/tensorboard/{log_name}"
+        return f"tmp/tensorboard/{self._zone_name}/{log_name}"
 
     def prepare_tensorbord_logs(self, log_name: str, copy_prev_logs=True, prev_logs_env=None) -> tuple[str, str]:
         """ Prepare tensorboard logs for an experiment, copy previous experiment logs from storage     
