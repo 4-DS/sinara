@@ -630,7 +630,7 @@ def get_run_papermill_params():
 def write_business_report(nb_commit_report, 
                           nb_business_report_file_name, 
                           runinfo_file_name):
-    print(f"RUN INFO FILE NAME:{runinfo_file_name}")
+    print(f"RUN INFO FILE NAME: {runinfo_file_name}")
     from nbconvert import NotebookExporter
     import json
 
