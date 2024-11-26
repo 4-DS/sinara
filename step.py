@@ -843,7 +843,7 @@ class StepReport:
 
                     tmp_tensorboard_log_dir = f"tmp/tensorboard"
                     log_events = fs.glob(f"{tmp_tensorboard_log_dir}/**/{run_id}/events.out*")
-                    for log_path in log_events:
+                    for log_path in log_events if not log_events is None else []:
                         p = Path(log_path)
                         events_file = p.name
                         log_name = p.parts[-3]
