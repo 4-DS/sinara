@@ -688,8 +688,7 @@ def create_business_report_summary(runinfo_dict):
     header_params = {
         "product_name": runinfo_dict["pipeline_params"]["pipeline_name"],
         "Step_name": runinfo_dict["step_name"],
-        #TODO: enable commit saving
-        "commit": 'None'
+        "commit": runinfo_dict["commit"]
     }
     header_template = business_report_cell["source"][HEADER_INDEX]
     header = header_template.format(**header_params)

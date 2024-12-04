@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+import git
 import glob
 import shutil
 import dataclasses
@@ -302,9 +303,9 @@ class NotebookSubstep:
         self.registered_tmp_entities = {}
 
 
-        #self._commit = str(git.Repo().head.commit)[:8]  # TODO what if git isn't presented
-        #self._origin = next(git.Repo().remotes.origin.urls)
-        #git.Repo().git.clear_cache()
+        self._commit = str(git.Repo().commit("HEAD"))
+        self._origin = next(git.Repo().remotes.origin.urls)
+        git.Repo().git.clear_cache()
 
         self._run_result = NotebookSubstepRunResult.UNKNOWN
 
@@ -447,8 +448,7 @@ class NotebookSubstep:
         run_info["status"] = 'COMPLETE'
         run_info["duration"] = f"{stop_time - start_time}"
 
-        # TODO
-        #run_info["commit"] = self._commit
+        run_info["commit"] = self._commit
         
         run_info["outputs_url"] = self._outputs_url()
         run_info["notebook_report_url"] = self.make_data_url(self._step_name, self._env_name, self._pipeline_name, self._zone_name, f"reports.{get_curr_notebook_name()}", self._run_id, 'outputs')
@@ -479,8 +479,7 @@ class NotebookSubstep:
         run_info["tmp"] = {**self.registered_tmp_inputs, **self.registered_tmp_outputs, **self.registered_tmp_entities}
         run_info["status"] = 'RUNNING'
         run_info["duration"] = f"{stop_time - start_time}"
-        # TODO
-        #run_info["origin"] = self._origin
+        run_info["origin"] = self._origin
         run_info["step_name"] = self._step_name
 
         return run_info
