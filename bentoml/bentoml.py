@@ -94,7 +94,13 @@ def save_bentoservice( bentoservice, *, substep = None, path, service_version = 
         #<env>.<product>.<zone>.<ml_model>:<ml_model_run_id>
         service_version = f'{substep.env_name}.{substep.pipeline_name}.{substep.zone_name}.{bentoservice_name}.{runid}'
     
-    save_info = [f'BENTO_SERVICE={service_version}']
+    image_type = os.getenv("SINARA_IMAGE_TYPE", "")
+    image_name = os.getenv("JUPYTER_IMAGE_SPEC", "")
+    
+    save_info = [f'BENTO_SERVICE={service_version}',
+                 f'SINARA_IMAGE_TYPE={image_type}',
+                 f'SINARA_IMAGE_NAME={image_name}'
+                ]
     
     #write bento service to tmp dir
     tmppath = get_sinara_step_tmp_path()
