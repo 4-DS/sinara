@@ -63,6 +63,19 @@ def get_sinara_user_work_dir():
 def get_sinara_step_tmp_path():
     return f"{os.getcwd()}/tmp"
 
+def get_sinara_platform():
+    return os.getenv("SINARA_PLATFORM")
+    
+def get_tmp_work_path(write_root=False):
+    get_tmp_prepared()
+    valid_tmp_target_path = f'/tmp/step{os.getcwd().replace(get_sinara_user_work_dir(),"")}'
+    if write_root:
+        return valid_tmp_target_path
+    else:
+        valid_tmp_target_path_runid = f'{valid_tmp_target_path}/{get_curr_run_id()}'
+        os.makedirs(valid_tmp_target_path_runid, exist_ok=True)
+        return valid_tmp_target_path_runid
+    
 def get_tmp_prepared():
     if "DSML_CURR_RUN_ID_FROM_PLINE" not in os.environ:
         valid_tmp_target_path = f'/tmp/step{os.getcwd().replace(get_sinara_user_work_dir(),"")}'
