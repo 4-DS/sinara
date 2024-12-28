@@ -17,6 +17,8 @@ import pandas as pd
 import pprint
 import copy
 import re
+import yaml
+from yaml.loader import FullLoader
 
 from subprocess import STDOUT, PIPE, Popen, run, CalledProcessError
 
@@ -602,9 +604,18 @@ def get_run_papermill_params():
     pipeline_params_file_path = os.environ["SINARA_PIPELINE_PARAMS_FILE_PATH"]
     
     papermill_params = {}
-    with open(step_params_file_path) as json_file:
-        papermill_params["params"] = json.load(json_file)
-
+    # with open(step_params_file_path) as json_file:
+    #     papermill_params["params"] = json.load(json_file)
+    _, ext = os.path.splitext(step_params_file_path)
+    if ext == ".json":
+        with open(step_params_file_path) as json_file:
+            papermill_params["params"] = json.load(json_file)
+    elif ext in [".yml", ".yaml"]:
+        with open(step_params_file_path) as yaml_file:
+            papermill_params["params"] = yaml.load(yaml_file, Loader=FullLoader)
+    else:
+        raise Exception("{ext} not supported in sinara".format(ext=ext))
+        
     required_pipeline_params = ["env_name",
                                "pipeline_name",
                                #"zone_name",
