@@ -6,7 +6,20 @@ from functools import partial
 from pyspark.sql.functions import regexp_replace,col,lit
 from urllib.parse import urlsplit
 import logging
+from .settings import _SinaraSettings
 from .substep import get_tmp_work_path
+
+def get_block_size():
+    if hasattr(_SinaraSettings, 'get_storage_block_size'):
+        return _SinaraSettings.get_storage_block_size()
+    else:
+        return 10 * 1024 * 1024
+
+def get_row_size():
+    if hasattr(_SinaraSettings, 'get_storage_row_size'):
+        return _SinaraSettings.get_storage_row_size()
+    else:
+        return 1024 * 1024
  
 def SinaraArchive_save_file(file_col, tmp_entity_dir):
     '''
@@ -26,8 +39,8 @@ class SinaraArchive:
     Provides effective way to store large files and pipeline entities in the SinaraML Storage.
     """
 
-    BLOCK_SIZE = 10 * 1024 * 1024
-    ROW_SIZE = 1000 * 1024
+    BLOCK_SIZE = get_block_size()
+    ROW_SIZE = get_row_size()
     
     def __init__(self, spark):
         self._spark = spark;
