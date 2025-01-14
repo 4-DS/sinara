@@ -6,6 +6,7 @@ from functools import partial
 from pyspark.sql.functions import regexp_replace,col,lit
 from urllib.parse import urlsplit
 import logging
+from .substep import get_tmp_work_path
  
 def SinaraArchive_save_file(file_col, tmp_entity_dir):
     '''
@@ -77,6 +78,9 @@ class SinaraArchive:
         """
         df = self.pack_files_from_tmp_to_spark_df(tmp_entity_dir)
         df.write.option("parquet.block.size", self.BLOCK_SIZE).mode("overwrite").parquet(store_path)
+
+    def pack(self, tmp_entity_dir, store_path):
+        self.pack_files_from_tmp_to_store(tmp_entity_dir, store_path)
     
     def unpack_files_from_spark_df_to_tmp(self, df_archive, tmp_entity_dir):
         """
@@ -95,6 +99,12 @@ class SinaraArchive:
         """
         df = self._spark.read.parquet(store_path)
         self.unpack_files_from_spark_df_to_tmp(df, tmp_entity_dir)
+
+    def unpack(self, store_path):
+        path = Path(store_path)
+        tmp_entity_dir = Path(get_tmp_work_path()) / Path(store_path).name
+        self.unpack_files_from_store_to_tmp(store_path, tmp_entity_dir)
+        return str(tmp_entity_dir)
         
     def _split_file(self, path, chunk_size):
         parts_path = Path(f"{path.parent}/{path.name}.parts")
