@@ -63,7 +63,7 @@ def read_notebook_output(notebook_path):
 class Experiment():
 
     @staticmethod
-    def function(nbname):
+    def function(nbname, tag = ""):
         nb = nbformat.read(nbname, as_version=4)
         #print(nbname)
         func_name = nbname.replace('.', '_')
@@ -73,17 +73,21 @@ class Experiment():
         parameters = ""
         for p in params_list:
             parameters = parameters + f"'{p}': {p},\n"
-        
+
+        outnbname = nbname.replace('.ipynb', '_' + tag + '.ipynb') if tag else nbname
+        outnbname = f"{get_tmp_work_path()}/{outnbname}"
+        #print(outnbname)
         func_code = """
         #print(f"Hello, {name}!")
         print(f"Hello from %nbname%!")
         parameters = {
         %parameters%
         }
-        outnbname = f"%out%/%nbname%"
-        papermill.execute.execute_notebook("%nbname%", outnbname, parameters=parameters)
-        return read_notebook_output(outnbname)
-        """.replace('%nbname%', nbname).replace('%parameters%', parameters).replace('%out%', f"{get_tmp_work_path()}")
+        #outnbname = f"%out%/%nbname%"
+        papermill.execute.execute_notebook("%nbname%", "%outnbname%", parameters=parameters)
+        return read_notebook_output("%outnbname%")
+        """.replace('%nbname%', nbname).replace('%parameters%', parameters) \
+        .replace('%outnbname%', outnbname)
         return create_function(func_name, func_arguments, func_code)
         
 
